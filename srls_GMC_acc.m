@@ -74,6 +74,8 @@ if strcmp(acceleration,'original')
    [xv_lambda, iter, res_norm_hist] = fixed_iter(xv0,@F2,params_fixed,'original');
 elseif strcmp(acceleration,'nesterov')
    [xv_lambda, iter, res_norm_hist] = fixed_iter(xv0,@F2,params_fixed,'nesterov');
+elseif strcmp(acceleration,'inertia')
+   [xv_lambda, iter, res_norm_hist] = fixed_iter(xv0,@F2,params_fixed,'inertia');
 elseif strcmp(acceleration,'aa2')
    [xv_lambda, iter, res_norm_hist] = fixed_iter(xv0,@F2,params_fixed,'aa2');
 end

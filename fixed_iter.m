@@ -65,6 +65,33 @@ function [x, iter, res_norm_hist] = fixed_iter(x0, F, params, algorithm)
                 end
             end
         end
+    elseif strcmp(algorithm, 'inertia')
+        x_prev = x;
+        x_prev2 = x;
+        res_norm_prev = Inf;
+        while iter<=max_iter
+            iter = iter + 1;
+            x_tilde = x_prev + 0.333*(x_prev - x_prev2);
+            Fx = F(x_tilde);
+            res_norm = norm(Fx-x_tilde);
+            if mod(iter,100)==0 & verbose
+                fprintf('res_norm = %f after %d iterations\n', res_norm, iter);
+            end
+            x_prev2 = x_prev;
+            x_prev = Fx;
+            res_norm_hist(iter) = res_norm;
+            if early_termination
+                if res_norm/norm(x_tilde) < tol
+                    cg_check = cg_check + 1;
+                else
+                    cg_check = 0;
+                end
+                if cg_check >= 10
+                    x = Fx;
+                    break
+                end
+            end
+        end
     elseif strcmp(algorithm, 'aa2')
         mem_size = params.mem_size;
         iter = iter + 1;
@@ -74,7 +101,7 @@ function [x, iter, res_norm_hist] = fixed_iter(x0, F, params, algorithm)
             iter = iter + 1;
             Fmem_mem = Fmem - mem;
             e = ones(size(Fmem_mem,2),1);
-            alpha = (Fmem_mem' * Fmem_mem + 1e-10*diag(e)) \ e;
+            alpha = (Fmem_mem' * Fmem_mem + 1e-12*diag(e)) \ e;
             alp = alpha / sum(alpha);
             x = Fmem * alp;
             Fx = F(x);
