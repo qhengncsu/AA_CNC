@@ -14,7 +14,7 @@ xhat_matrix1 = srls_GMC_path(y, X, type="single", acceleration="original", scree
 toc
 tic
 %acceleration can also be nesterov
-xhat_matrix2 = srls_GMC_path(y, X, type="single", acceleration="aa2", screen=true, lambda_min_ratio=0.01);
+xhat_matrix2 = srls_GMC_path(y, X, type="single", acceleration="aa2", screen=false, lambda_min_ratio=0.01);
 toc
 norm(xhat_matrix1-xhat_matrix2)/norm(xhat_matrix2)
 

@@ -25,6 +25,8 @@ params.addParameter('tol_stop', 1e-5, @(x) isnumeric(x));
 params.addParameter('early_termination', true, @(x) islogical(x));
 params.addParameter('acceleration', 'aa2', @(x) ischar(x)||isstring(x));
 params.addParameter('mask', ones(size(y)), @(x) isnumeric(x));
+params.addParameter('mem_size', 5, @(x) isnumeric(x));
+params.addParameter('eta', 1e-8, @(x) isnumeric(x));
 params.parse(varargin{:});
 H = params.Results.H;
 gamma = params.Results.gamma;
@@ -33,12 +35,15 @@ tol_stop = params.Results.tol_stop;
 early_termination = params.Results.early_termination;
 acceleration = params.Results.acceleration;
 mask = params.Results.mask;
+mem_size = params.Results.mem_size;
+eta = params.Results.eta;
 params_fixed = struct();
 params_fixed.max_iter = max_iter;
 params_fixed.tol = tol_stop;
 params_fixed.early_termination = early_termination;
-params_fixed.mem_size = 5;
+params_fixed.mem_size = mem_size;
 params_fixed.verbose = true;
+params_fixed.eta = eta;
 n1 = size(y,1);
 n2 = size(y,2);
 if strcmp(app,'deblurring')
@@ -62,7 +67,7 @@ elseif strcmp(app,'inpainting')
 end
 xv0 = [y(:);y(:)];
 if gamma>0
-    mu = 1.99 / ( rho * max( 1,  gamma / (1-gamma) ) );
+    mu = 1.99 / ( rho * (1-2*gamma+2*gamma^2)/(1-gamma) );
     [xv_lambda, iter, res_norm_hist] = fixed_iter(xv0,@F1,params_fixed,acceleration);
     xhat = reshape(xv_lambda(1:(n1*n2)),[n1,n2]);
     vhat = reshape(xv_lambda((n1*n2+1):(2*n1*n2)), [n1,n2]);

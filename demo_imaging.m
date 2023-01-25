@@ -4,6 +4,8 @@ y = awgn(imfilter(x,H,'circular'),20,'measured');
 snr_cnc = zeros(12,1);
 snr_convex = zeros(12,1);
 lambdas = 2.5:2.5:30;
+[xhat1, vhat1, res_norm_hist1] = srls_GMC_imaging(y, 'deblurring', 5, H=H, gamma=0.98, acceleration = 'aa2');
+[xhat2, vhat2, res_norm_hist2] = srls_GMC_imaging(y, 'deblurring', 5, H=H, gamma=0.98, acceleration = 'original');
 for i=1:12
     [xhat1, vhat1, res_norm_hist1] = srls_GMC_imaging(y, 'deblurring', lambdas(i), H=H, gamma=0.98, acceleration = 'aa2');
     snr_cnc(i) = snr(x,xhat1-x);
