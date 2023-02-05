@@ -1,12 +1,12 @@
-X = randn(1000,1000);
-beta = [ones(100,1);zeros(900,1)];
+X = randn(1000,2000);
+beta = [ones(100,1);zeros(1900,1)];
 y = X*beta + randn(1000,1)*std(X*beta);
 groups = cell(100,1);
-for i=1:100
+for i=1:200
     groups{i} = ((i-1)*10+1):(i*10);
 end
-y = randn(1000,1);
-%y = (y-mean(y))/std(y);
+%y = randn(1000,1);
+y = (y-mean(y))/std(y);
 X = normc(X);
 
 %%
@@ -26,7 +26,7 @@ legend('Original', 'Inertia', 'AA-II','Location', 'best','Interpreter','latex');
 
 %%
 [xhat1, vhat1, res_norm_hist1] = srls_GMC_acc(y, X, 0.8, 'type', "grouped", 'acceleration', "original", "groups", groups);
-[xhat2, vhat2, res_norm_hist2] = srls_GMC_acc(y, X, 0.8, 'type', "grouped", 'acceleration', "nesterov", "groups", groups);
+[xhat2, vhat2, res_norm_hist2] = srls_GMC_acc(y, X, 0.8, 'type', "grouped", 'acceleration', "inertia", "groups", groups);
 [xhat3, vhat3, res_norm_hist3] = srls_GMC_acc(y, X, 0.8, 'type', "grouped", 'acceleration', "aa2", "groups", groups);
 figure;
 plot(log(res_norm_hist1), 'k-', 'LineWidth', 1.5)
@@ -36,7 +36,7 @@ hold on;
 plot(log(res_norm_hist3), 'r-',  'LineWidth',1.5)
 xlabel('iteration');
 ylabel('norm of redidual');
-legend('Original', 'Nesterov', 'AA-II','Location', 'best','Interpreter','latex');
+legend('Original', 'Inertia', 'AA-II','Location', 'best','Interpreter','latex');
 
 [xhat1, vhat1, res_norm_hist1] = srls_GMC_acc(y, X, 0.05, type="single", acceleration="original", gamma=0.95);
 [xhat2, vhat2, res_norm_hist2] = srls_GMC_acc(y, X, 0.05, type="single", acceleration="inertia", gamma=0.95);

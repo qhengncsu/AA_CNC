@@ -72,7 +72,7 @@ if gamma>0
     xhat = reshape(xv_lambda(1:(n1*n2)),[n1,n2]);
     vhat = reshape(xv_lambda((n1*n2+1):(2*n1*n2)), [n1,n2]);
 else
-    mu = 1 / rho;
+    mu = 1.99 / rho;
     [x_lambda, iter, res_norm_hist] = fixed_iter(y(:),@F2,params_fixed,acceleration);
     xhat = reshape(x_lambda,[n1,n2]);
     vhat = zeros(size(y));

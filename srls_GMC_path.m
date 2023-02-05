@@ -27,10 +27,10 @@ params.addParameter('max_iter', 10000, @(x) isnumeric(x));
 params.addParameter('tol_stop', 1e-5, @(x) isnumeric(x));
 params.addParameter('tol_kkt', 1e-3, @(x) isnumeric(x));
 params.addParameter('lambda_min_ratio', 0.01, @(x) isnumeric(x));
-params.addParameter('screen_off_ratio', 0.1, @(x) isnumeric(x));
+params.addParameter('screen_off_ratio', 0.05, @(x) isnumeric(x));
 params.addParameter('nlambda', 100, @(x) isnumeric(x));
 params.addParameter('screen', true, @(x) islogical(x));
-params.addParameter('acceleration', 'nesterov', @(x) ischar(x)||isstring(x));
+params.addParameter('acceleration', 'aa2', @(x) ischar(x)||isstring(x));
 params.addParameter('early_termination', true, @(x) islogical(x));
 params.addParameter('mem_size', 5, @(x) isnumeric(x));
 params.addParameter('eta', 1e-8, @(x) isnumeric(x));
@@ -86,7 +86,7 @@ lambda_seq = lambda_max:inc:lambda_min;
 xhat_matrix = zeros(nlambda,p);
 vhat_matrix = zeros(nlambda,p);
 d_prev = zeros(p,1);
-c_prev = Xty;
+c_prev = -Xty;
 
 for i = 2:nlambda
     lambda = lambda_seq(i);
@@ -96,23 +96,26 @@ for i = 2:nlambda
         threshold = max(gamma,1-gamma)*(2*lambda - lambda_seq(i-1));
         if strcmp(type,'single')
             keep = ~((abs(d_prev)<threshold) & (abs(c_prev)<threshold));
-            a = keep;
         else
             keep = ~((group_norm_vec(d_prev,groups)./Ks'<threshold) & (group_norm_vec(c_prev,groups)./Ks'<threshold));
-            a = false(p,1);
-            groups_temp = {};
-            l = 0;
-            idx = 0;
-            for k=1:ngroup
-                if keep(k)
-                    a(groups{k}) = true;
-                    l = l+1;
-                    groups_temp{l} = (idx+1):(idx+length(groups{k}));
-                    idx = idx + length(groups{k});
-                end
-            end
         end
         while kkt_fail
+            if strcmp(type,'single')
+                a = keep;
+            else
+                a = false(p,1);
+                groups_temp = {};
+                l = 0;
+                idx = 0;
+                for k=1:ngroup
+                    if keep(k)
+                        a(groups{k}) = true;
+                        l = l+1;
+                        groups_temp{l} = (idx+1):(idx+length(groups{k}));
+                        idx = idx + length(groups{k});
+                    end
+                end
+            end
             p_a = sum(a);
             fprintf('%d features remaining\n', p_a);
             X_a = X(:,a);
@@ -127,13 +130,7 @@ for i = 2:nlambda
             x_current_a = x_current(a,1);
             v_current_a = v_current(a,1);
             xv_current_a = [x_current_a;v_current_a];
-            if strcmp(acceleration,'original')
-                [xv_lambda_a, iter] = fixed_iter(xv_current_a,@F1,params_fixed,'original');
-            elseif strcmp(acceleration,'nesterov')
-                [xv_lambda_a, iter] = fixed_iter(xv_current_a,@F1,params_fixed,'nesterov');
-            elseif strcmp(acceleration,'aa2')
-                [xv_lambda_a, iter] = fixed_iter(xv_current_a,@F1,params_fixed,'aa2');
-            end
+            [xv_lambda_a, iter] = fixed_iter(xv_current_a,@F1,params_fixed,acceleration);
             fprintf('lambda = %f solved in %d iterations\n', lambda, iter);
             x_lambda = zeros(p,1);
             v_lambda = zeros(p,1);
@@ -141,10 +138,10 @@ for i = 2:nlambda
             v_lambda(a) = xv_lambda_a((p_a+1):2*p_a);
             if p < n
                 d_prev = gamma*AHA(x_lambda-v_lambda);
-                c_prev = -AHA(x_lambda) + Xty + d_prev;
+                c_prev = AHA(x_lambda) - Xty - d_prev;
             else
                 d_prev = gamma*AH(A(x_lambda-v_lambda));
-                c_prev = -AH(A(x_lambda)) + Xty + d_prev;
+                c_prev = AH(A(x_lambda)) - Xty - d_prev;
             end
             if strcmp(type,'single')
                 kkt_x_case1 = abs(c_prev) > (lambda+tol_kkt);
@@ -166,19 +163,13 @@ for i = 2:nlambda
             total_violations = sum(kkt_violations);
             if kkt_fail
                 fprintf('%d optimality conditions violated\n', total_violations);
-                keep = keep | total_violations;
+                keep = keep | kkt_violations;
             end
         end
         xhat_matrix(i,:) = x_lambda;
         vhat_matrix(i,:) = v_lambda;
     else
-        if strcmp(acceleration,'original')
-            [xv_lambda, iter] = fixed_iter(xv_current,@F2,params_fixed,'original');
-        elseif strcmp(acceleration,'nesterov')
-            [xv_lambda, iter] = fixed_iter(xv_current,@F2,params_fixed,'nesterov');
-        elseif strcmp(acceleration,'aa2')
-            [xv_lambda, iter] = fixed_iter(xv_current,@F2,params_fixed,'aa2');
-        end
+        [xv_lambda, iter] = fixed_iter(xv_current,@F2,params_fixed,acceleration);
         fprintf('lambda = %f solved in %d iterations\n', lambda, iter);
         xhat_matrix(i,:) = xv_lambda(1:p);
         vhat_matrix(i,:) = xv_lambda((p+1):2*p);

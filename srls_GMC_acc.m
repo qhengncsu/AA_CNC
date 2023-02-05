@@ -25,7 +25,7 @@ params.addParameter('groups', {}, @(x) iscell(x));
 params.addParameter('gamma', 0.8, @(x) isnumeric(x));
 params.addParameter('max_iter', 10000, @(x) isnumeric(x));
 params.addParameter('tol_stop', 1e-5, @(x) isnumeric(x));
-params.addParameter('acceleration', 'nesterov', @(x) ischar(x)||isstring(x));
+params.addParameter('acceleration', 'aa2', @(x) ischar(x)||isstring(x));
 params.addParameter('early_termination', true, @(x) islogical(x));
 params.addParameter('mem_size', 5, @(x) isnumeric(x));
 params.addParameter('eta', 1e-8, @(x) isnumeric(x));
@@ -73,20 +73,12 @@ lambda = lambda_max*lambda_ratio;
 x0 = zeros(p,1);
 v0 = zeros(p,1);
 xv0 = [x0;v0];
-if strcmp(acceleration,'original')
-   [xv_lambda, iter, res_norm_hist] = fixed_iter(xv0,@F2,params_fixed,'original');
-elseif strcmp(acceleration,'nesterov')
-   [xv_lambda, iter, res_norm_hist] = fixed_iter(xv0,@F2,params_fixed,'nesterov');
-elseif strcmp(acceleration,'inertia')
-   [xv_lambda, iter, res_norm_hist] = fixed_iter(xv0,@F2,params_fixed,'inertia');
-elseif strcmp(acceleration,'aa2')
-   [xv_lambda, iter, res_norm_hist] = fixed_iter(xv0,@F2,params_fixed,'aa2');
-end
+[xv_lambda, iter, res_norm_hist] = fixed_iter(xv0,@F1,params_fixed,acceleration);
 fprintf('lambda = %f solved in %d iterations\n', lambda, iter);
 
 xhat = xv_lambda(1:p);
 vhat = xv_lambda((p+1):(2*p));
-function xv_next = F2(xv)
+function xv_next = F1(xv)
     x = xv(1:p,1);
     v = xv((p+1):(2*p),1);
     if p >= n
