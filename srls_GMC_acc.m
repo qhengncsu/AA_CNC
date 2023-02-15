@@ -17,7 +17,7 @@ function [xhat, vhat, res_norm_hist] = srls_GMC_acc(y, X, lambda_ratio, varargin
 % OUTPUT
 %   xhat, vhat, res_norm_hist
 % Algorithm: Forward-backward, Theorem 25.8 in Bauschke and Combettes(2011)
-% Acceleration: Nesterov with restart, Type-II Anderson
+% Acceleration: Inertia, Type-II Anderson
 
 params = inputParser;
 params.addParameter('type', 'single', @(x) ischar(x)||isstring(x));
@@ -52,11 +52,9 @@ params_fixed.mem_size = mem_size;
 params_fixed.verbose = true;
 params_fixed.eta = eta;
 Xt = X';
-XtX = Xt*X;
-rho = max(eig(XtX));
+rho = norm(X)^2;
 A = @(x) X*x;
 AH = @(x) Xt*x;
-AHA = @(x) XtX*x;
 mu = 1.99/(rho*(1-2*gamma+2*gamma^2)/(1-gamma));
 n = size(X,1);
 p = size(X,2);
@@ -81,13 +79,8 @@ vhat = xv_lambda((p+1):(2*p));
 function xv_next = F1(xv)
     x = xv(1:p,1);
     v = xv((p+1):(2*p),1);
-    if p >= n
-        zx = x - mu * ( AH(A(x + gamma*(v-x))) - Xty);
-        zv = v - mu * ( gamma * AH(A(v-x)) );
-    else
-        zx = x - mu * ( AHA(x + gamma*(v-x)) - Xty);
-        zv = v - mu * ( gamma * AHA(v-x)) ;
-    end
+    zx = x - mu * ( AH(A(x + gamma*(v-x))) - Xty);
+    zv = v - mu * ( gamma * AH(A(v-x)) );
     if strcmp(type,'single')
         x = soft(zx, mu * lambda);
         v = soft(zv, mu * lambda);

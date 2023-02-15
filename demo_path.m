@@ -10,10 +10,10 @@ y = (y-mean(y))/std(y);
 X = normc(X);
 
 tic
-xhat_matrix1 = srls_GMC_path(y, X, type="single", acceleration="aa2", screen=false);
+xhat_matrix1 = srls_GMC_path(y, X, type="single", acceleration="original", screen=false, gamma=0.8);
 toc
 tic
-xhat_matrix2 = srls_GMC_path(y, X, type="single", acceleration="aa2", screen=true, tol_kkt=1e-3);
+xhat_matrix2 = srls_GMC_path(y, X, type="single", acceleration="aa2", screen=true, gamma=0.8);
 toc
 norm(xhat_matrix1-xhat_matrix2)/norm(xhat_matrix2)
 

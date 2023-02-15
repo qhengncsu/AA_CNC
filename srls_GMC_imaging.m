@@ -16,7 +16,7 @@ function [xhat, vhat, res_norm_hist] = srls_GMC_imaging(y, app, lambda, varargin
 % OUTPUT
 %   xhat, vhat, res_norm_hist
 % Algorithm: Forward-backward, Theorem 25.8 in Bauschke and Combettes(2011)
-% Acceleration: Nesterov with restart, Type-II Anderson
+% Acceleration: Inertia, Type-II Anderson
 params = inputParser;
 params.addParameter('H', fspecial('average',5), @(x) isnumeric(x));
 params.addParameter('gamma', 0.8, @(x) isnumeric(x));
@@ -92,7 +92,6 @@ end
 function x_next = F2(x)
     x = reshape(x,[n1,n2]);
     zx = x - mu * (AHA(x)-AHy);
-    x = chambolle_prox_TV_stop(zx, lambda = mu * lambda, tol=1e-3);
-    x_next = [x(:)];
+    x_next = chambolle_prox_TV_stop(zx, lambda = mu * lambda, tol=1e-3);
 end
 end

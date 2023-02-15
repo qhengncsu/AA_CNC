@@ -14,7 +14,7 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, F, params, algorithm)
             res = Fz - z;
             res_norm = norm(res);
             res_norm_hist(iter) = res_norm;
-            if mod(iter,100)==0 & verbose
+            if mod(iter,100)==0 && verbose
                 fprintf('res_norm = %f after %d iterations\n', res_norm, iter);
             end
             z = Fz;
@@ -39,7 +39,7 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, F, params, algorithm)
             z_tilde = z_prev + (k-1)/(k+2)*(z_prev - z_prev2);
             Fz = F(z_tilde);
             res_norm = norm(Fz-z_tilde);
-            if mod(iter,100)==0 & verbose
+            if mod(iter,100)==0 && verbose
                 fprintf('res_norm = %f after %d iterations\n', res_norm, iter);
             end
             z_prev2 = z_prev;
@@ -73,7 +73,7 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, F, params, algorithm)
             z_tilde = z_prev + 0.333*(z_prev - z_prev2);
             Fz = F(z_tilde);
             res_norm = norm(Fz-z_tilde);
-            if mod(iter,100)==0 & verbose
+            if mod(iter,100)==0 && verbose
                 fprintf('res_norm = %f after %d iterations\n', res_norm, iter);
             end
             z_prev2 = z_prev;
@@ -107,7 +107,6 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, F, params, algorithm)
             iter = iter + 1;
             zkp1_FB = F(zk);
             gk = zk - zkp1_FB;
-            %populate the history before starting anderson iterations
             if iter <= mem_size    
                 Zk(:, iter+1) = zkp1_FB;
                 Yk(:, iter) = gk - gk_1;
@@ -133,7 +132,7 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, F, params, algorithm)
             gk_1 = gk;
             res_norm = norm(gk_1);
             res_norm_hist(iter) = res_norm;
-            if mod(iter,100)==0 & verbose
+            if mod(iter,100)==0 && verbose
                 fprintf('res_norm = %f after %d iterations\n', res_norm, iter);
             end
             if early_termination

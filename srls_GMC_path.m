@@ -17,7 +17,7 @@ function [xhat_matrix, vhat_matrix] = srls_GMC_path(y, X, varargin)
 % OUTPUT
 %   xhat_matrix, vhat_matrix
 % Algorithm: Forward-backward, Theorem 25.8 in Bauschke and Combettes(2011)
-% Acceleration: Nesterov with restart, Type-II Anderson
+% Acceleration: Inertia, Type-II Anderson
 
 params = inputParser;
 params.addParameter('type', 'single', @(x) ischar(x)||isstring(x));
@@ -25,7 +25,7 @@ params.addParameter('groups', {}, @(x) iscell(x));
 params.addParameter('gamma', 0.8, @(x) isnumeric(x));
 params.addParameter('max_iter', 10000, @(x) isnumeric(x));
 params.addParameter('tol_stop', 1e-5, @(x) isnumeric(x));
-params.addParameter('tol_kkt', 1e-3, @(x) isnumeric(x));
+params.addParameter('tol_kkt', 1e-2, @(x) isnumeric(x));
 params.addParameter('lambda_min_ratio', 0.01, @(x) isnumeric(x));
 params.addParameter('screen_off_ratio', 0.05, @(x) isnumeric(x));
 params.addParameter('nlambda', 100, @(x) isnumeric(x));
@@ -62,11 +62,9 @@ params_fixed.mem_size = mem_size;
 params_fixed.verbose = false;
 params_fixed.eta = eta;
 Xt = X';
-XtX = Xt*X;
-rho = max(eig(XtX));
+rho = norm(X)^2;
 A = @(x) X*x;
 AH = @(x) Xt*x;
-AHA = @(x) XtX*x;
 mu = 1.99 / ( rho * (1-2*gamma+2*gamma^2)/(1-gamma) ) ;
 n = size(X,1);
 p = size(X,2);
@@ -91,7 +89,7 @@ c_prev = -Xty;
 for i = 2:nlambda
     lambda = lambda_seq(i);
     xv_current = [xhat_matrix(i-1,:),vhat_matrix(i-1,:)]';
-    if screen & (lambda>=screen_off_ratio*lambda_max)
+    if screen && (lambda>=screen_off_ratio*lambda_max)
         kkt_fail = true;
         threshold = max(gamma,1-gamma)*(2*lambda - lambda_seq(i-1));
         if strcmp(type,'single')
@@ -120,11 +118,9 @@ for i = 2:nlambda
             fprintf('%d features remaining\n', p_a);
             X_a = X(:,a);
             Xt_a = Xt(a,:);
-            XtX_a = XtX(a,a);
             Xty_a = Xty(a,1);
             A_a = @(x) X_a*x;
             AH_a = @(x) Xt_a*x;
-            AHA_a = @(x) XtX_a*x;
             x_current = xv_current(1:p,1);
             v_current = xv_current((p+1):2*p,1);
             x_current_a = x_current(a,1);
@@ -136,13 +132,8 @@ for i = 2:nlambda
             v_lambda = zeros(p,1);
             x_lambda(a) = xv_lambda_a(1:p_a);
             v_lambda(a) = xv_lambda_a((p_a+1):2*p_a);
-            if p < n
-                d_prev = gamma*AHA(x_lambda-v_lambda);
-                c_prev = AHA(x_lambda) - Xty - d_prev;
-            else
-                d_prev = gamma*AH(A(x_lambda-v_lambda));
-                c_prev = AH(A(x_lambda)) - Xty - d_prev;
-            end
+            d_prev = gamma*AH(A(x_lambda-v_lambda));
+            c_prev = AH(A(x_lambda)) - Xty - d_prev;
             if strcmp(type,'single')
                 kkt_x_case1 = abs(c_prev) > (lambda+tol_kkt);
                 kkt_v_case1 = abs(d_prev) > (lambda+tol_kkt);
@@ -179,13 +170,8 @@ end
 function xv_next = F1(xv)
     x = xv(1:p_a,1);
     v = xv((p_a+1):(2*p_a),1);
-    if p >= n
-        zx = x - mu * ( AH_a(A_a(x + gamma*(v-x))) - Xty_a);
-        zv = v - mu * ( gamma * AH_a(A_a(v-x)) );
-    else
-        zx = x - mu * ( AHA_a(x + gamma*(v-x)) - Xty_a);
-        zv = v - mu * ( gamma * AHA_a(v-x)) ;
-    end
+    zx = x - mu * ( AH_a(A_a(x + gamma*(v-x))) - Xty_a);
+    zv = v - mu * ( gamma * AH_a(A_a(v-x)) );
     if strcmp(type,'single')
         x = soft(zx, mu * lambda);
         v = soft(zv, mu * lambda);
@@ -199,13 +185,8 @@ end
 function xv_next = F2(xv)
     x = xv(1:p,1);
     v = xv((p+1):(2*p),1);
-    if p >= n
-        zx = x - mu * ( AH(A(x + gamma*(v-x))) - Xty);
-        zv = v - mu * ( gamma * AH(A(v-x)) );
-    else
-        zx = x - mu * ( AHA(x + gamma*(v-x)) - Xty);
-        zv = v - mu * ( gamma * AHA(v-x)) ;
-    end
+    zx = x - mu * ( AH(A(x + gamma*(v-x))) - Xty);
+    zv = v - mu * ( gamma * AH(A(v-x)) );
     if strcmp(type,'single')
         x = soft(zx, mu * lambda);
         v = soft(zv, mu * lambda);
