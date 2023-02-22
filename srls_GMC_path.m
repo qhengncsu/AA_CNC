@@ -1,4 +1,4 @@
-function [xhat_matrix, vhat_matrix] = srls_GMC_path(y, X, varargin)
+function [xhat_matrix, vhat_matrix, lambda_seq] = srls_GMC_path(y, X, varargin)
 
 % [xhat_matrix, vhat_matrix] = srls_GMC_path(y, X, varargin)
 %
@@ -61,13 +61,21 @@ params_fixed.early_termination = early_termination;
 params_fixed.mem_size = mem_size;
 params_fixed.verbose = false;
 params_fixed.eta = eta;
+
+
+% data standardization
+n = size(X,1);
+p = size(X,2);
+center = mean(X);
+scale = sqrt(sum((X - center).^2)); % there is a 1/n inside the sqrt if there is a 1/n in the least squared loss
+X = (X - center)./scale;
+y = y -mean(y);
+
 Xt = X';
 rho = norm(X)^2;
 A = @(x) X*x;
 AH = @(x) Xt*x;
 mu = 1.99 / ( rho * (1-2*gamma+2*gamma^2)/(1-gamma) ) ;
-n = size(X,1);
-p = size(X,2);
 Xty = Xt*y;
 if strcmp(type,'single')
     lambda_max = max(abs(Xty));
@@ -80,14 +88,19 @@ lambda_min = lambda_min_ratio*lambda_max;
 inc = -(lambda_max-lambda_min)/(nlambda-1);
 lambda_seq = lambda_max:inc:lambda_min;
 
+
 % initialization
 xhat_matrix = zeros(nlambda,p);
 vhat_matrix = zeros(nlambda,p);
+intercept = zeros(nlambda, 1);
 d_prev = zeros(p,1);
 c_prev = -Xty;
 
 for i = 2:nlambda
     lambda = lambda_seq(i);
+    % adaptive tolerance?????
+    tol_kkt = min(1, lambda/100);  
+
     xv_current = [xhat_matrix(i-1,:),vhat_matrix(i-1,:)]';
     if screen && (lambda>=screen_off_ratio*lambda_max)
         kkt_fail = true;
@@ -157,14 +170,23 @@ for i = 2:nlambda
                 keep = keep | kkt_violations;
             end
         end
-        xhat_matrix(i,:) = x_lambda;
+        
+        % unstandardization
+        bb = x_lambda;
+        xhat_matrix(i,:) = bb./scale';
+        intercept(i, :) = mean(y) - center*bb;
         vhat_matrix(i,:) = v_lambda;
     else
         [xv_lambda, iter] = fixed_iter(xv_current,@F2,params_fixed,acceleration);
         fprintf('lambda = %f solved in %d iterations\n', lambda, iter);
-        xhat_matrix(i,:) = xv_lambda(1:p);
+        % unstandardization
+        bb = xv_lambda(1:p);
+        xhat_matrix(i,:) = bb./scale';
+        intercept(i, :) = mean(y) - center*bb;       
         vhat_matrix(i,:) = xv_lambda((p+1):2*p);
     end
+    
+ 
 end
 
 function xv_next = F1(xv)
