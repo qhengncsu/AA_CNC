@@ -1,4 +1,4 @@
-function [xhat, vhat, res_norm_hist] = srls_GMC_acc(y, X, lambda_ratio, varargin)
+function [xhat, vhat, res_norm_hist, intercept] = srls_GMC_acc(y, X, lambda_ratio, varargin)
 
 % [xhat, vhat, res_norm_hist] = srls_GMC_acc(y, X, varargin)
 %
@@ -51,13 +51,21 @@ params_fixed.early_termination = early_termination;
 params_fixed.mem_size = mem_size;
 params_fixed.verbose = true;
 params_fixed.eta = eta;
+
+% data standardization
+n = size(X,1);
+p = size(X,2);
+center = mean(X);
+scale = sqrt(sum((X - center).^2)); % there is a 1/n inside the sqrt if there is a 1/n in the least squared loss
+X = (X - center)./scale;
+y = y -mean(y);
+
+%
 Xt = X';
 rho = norm(X)^2;
 A = @(x) X*x;
 AH = @(x) Xt*x;
 mu = 1.99/(rho*(1-2*gamma+2*gamma^2)/(1-gamma));
-n = size(X,1);
-p = size(X,2);
 Xty = Xt*y;
 if strcmp(type,'single')
     lambda_max = max(abs(Xty));
@@ -74,8 +82,13 @@ xv0 = [x0;v0];
 [xv_lambda, iter, res_norm_hist] = fixed_iter(xv0,@F1,params_fixed,acceleration);
 fprintf('lambda = %f solved in %d iterations\n', lambda, iter);
 
-xhat = xv_lambda(1:p);
+%unstandardize the estimates 
+bb = xv_lambda(1:p);
+xhat = bb./scale';
+intercept = mean(y) - center*bb;
 vhat = xv_lambda((p+1):(2*p));
+
+
 function xv_next = F1(xv)
     x = xv(1:p,1);
     v = xv((p+1):(2*p),1);
