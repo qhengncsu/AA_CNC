@@ -26,3 +26,5 @@ xhat_matrix2 = srls_GMC_path(y, X, type="grouped",screen=true, lambda_min_ratio=
 toc
 norm(xhat_matrix1-xhat_matrix2)/norm(xhat_matrix2)
 
+
+

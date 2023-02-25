@@ -21,18 +21,18 @@ ylabel('SNR')
 xlim([2.5 30])
 hold off
 
-x = double(rgb2gray(imread('QR_code.jpg')));
-mask = binornd(1,0.8,size(x));
-y = awgn(x,20,'measured');
-snr_cnc = zeros(16,1);
-snr_convex = zeros(16,1);
-lambdas = 2.5:2.5:40;
-for i=1:16
-    [xhat1, vhat1, res_norm_hist1] = srls_GMC_imaging(y.*mask, 'inpainting', lambdas(i), gamma=0.98, acceleration = 'aa2',mask=mask);
+x = checkerboard(32);
+mask = binornd(1,0.4,size(x));
+y = awgn(x,10,'measured');
+snr_cnc = zeros(10,1);
+snr_convex = zeros(10,1);
+lambdas = 0.5:0.5:5;
+for i=1:10
+    [xhat1, vhat1, res_norm_hist1] = srls_GMC_imaging(y.*mask, 'matrix completion', lambdas(i), gamma=0.98, acceleration = 'aa2',mask=mask);
     snr_cnc(i) = snr(x,xhat1-x);
 end
-for i=1:16
-    [xhat2, vhat2, res_norm_hist2] = srls_GMC_imaging(y.*mask, 'inpainting', lambdas(i), gamma=0, acceleration = 'aa2',mask=mask);
+for i=1:10
+    [xhat2, vhat2, res_norm_hist2] = srls_GMC_imaging(y.*mask, 'matrix completion', lambdas(i), gamma=0, acceleration = 'aa2',mask=mask);
     snr_convex(i) = snr(x,xhat2-x);
 end
 hold on
@@ -41,5 +41,5 @@ plot(lambdas,snr_convex)
 legend('CNC','Convex','Location','east')
 xlabel('lambda')
 ylabel('SNR')
-xlim([2.5 40])
+xlim([0.5 5])
 hold off

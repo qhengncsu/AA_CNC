@@ -19,7 +19,7 @@ function [xhat, vhat, res_norm_hist] = srls_GMC_imaging(y, app, lambda, varargin
 % Acceleration: Inertia, Type-II Anderson
 params = inputParser;
 params.addParameter('H', fspecial('average',5), @(x) isnumeric(x));
-params.addParameter('gamma', 0.8, @(x) isnumeric(x));
+params.addParameter('gamma', 0.98, @(x) isnumeric(x));
 params.addParameter('max_iter', 10000, @(x) isnumeric(x));
 params.addParameter('tol_stop', 1e-5, @(x) isnumeric(x));
 params.addParameter('early_termination', true, @(x) islogical(x));
@@ -46,9 +46,9 @@ params_fixed.verbose = true;
 params_fixed.eta = eta;
 n1 = size(y,1);
 n2 = size(y,2);
+rho = 1;
 if strcmp(app,'deblurring')
     %rho = max(abs(fft2(H,n1,n2))^2,[],'all');
-    rho = 1;
     A = @(x) imfilter(x,H,'circular');
     AH = @(x) imfilter(x,H,'circular');
     AHy = AH(y);
@@ -57,12 +57,14 @@ if strcmp(app,'deblurring')
     BH = @(x) sqrt(gamma/lambda)*imfilter(x,H,'circular');
     BHB = @(x) BH(B(x));
 elseif strcmp(app,'inpainting')
-    H = fspecial('average',3);
-    rho = 1;
     AHA = @(x) mask.*x;
     AHy = AHA(y);
     %B = @(x) x - imfilter(x,H,'circular');
     %BHB = @(x) gamma/lambda*mask.*B(B(x));
+    BHB = @(x) gamma/lambda*AHA(x);
+elseif strcmp(app,'matrix completion')
+    AHA = @(x) mask.*x;
+    AHy = AHA(y);
     BHB = @(x) gamma/lambda*AHA(x);
 end
 xv0 = [y(:);y(:)];
@@ -84,14 +86,24 @@ function xv_next = F1(xv)
     v = reshape(xv((n1*n2+1):(2*n1*n2)), [n1,n2]);
     zx = x - mu * (AHA(x)-AHy+lambda*BHB(v-x)) ;
     zv = v - mu * (lambda*BHB(v-x));
-    x = chambolle_prox_TV_stop(zx, lambda = mu * lambda, tol=1e-3);
-    v = chambolle_prox_TV_stop(zv, lambda = mu * lambda, tol=1e-3);
+    if strcmp(app,'matrix completion')
+        x = svt(zx, mu * lambda);
+        v = svt(zv, mu * lambda);
+    else
+        x = chambolle_prox_TV_stop(zx, lambda = mu * lambda, tol=1e-3);
+        v = chambolle_prox_TV_stop(zv, lambda = mu * lambda, tol=1e-3);
+    end
     xv_next = [x(:);v(:)];
 end
 
 function x_next = F2(x)
     x = reshape(x,[n1,n2]);
     zx = x - mu * (AHA(x)-AHy);
-    x_next = chambolle_prox_TV_stop(zx, lambda = mu * lambda, tol=1e-3);
+    if strcmp(app,'matrix completion')
+        x_next = svt(zx, mu * lambda);
+    else
+        x_next = chambolle_prox_TV_stop(zx, lambda = mu * lambda, tol=1e-3);
+    end
+    x_next = x_next(:);
 end
 end
