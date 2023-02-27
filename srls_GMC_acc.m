@@ -15,17 +15,16 @@ function [xhat, vhat, res_norm_hist, intercept] = srls_GMC_acc(y, X, lambda_rati
 %   lambda_ratio the ratio of lambda to lambda_max
 %
 % OUTPUT
-%   xhat, vhat, res_norm_hist
-% Algorithm: Forward-backward, Theorem 25.8 in Bauschke and Combettes(2011)
-% Acceleration: Inertia, Type-II Anderson
+%   xhat, vhat, res_norm_hist, intercept
 
 params = inputParser;
 params.addParameter('type', 'single', @(x) ischar(x)||isstring(x));
 params.addParameter('groups', {}, @(x) iscell(x));
 params.addParameter('gamma', 0.8, @(x) isnumeric(x));
+params.addParameter('splitting', 'FB', @(x) ismember(x,{'DR','FB','FBF'}));
 params.addParameter('max_iter', 10000, @(x) isnumeric(x));
-params.addParameter('tol_stop', 1e-5, @(x) isnumeric(x));
-params.addParameter('acceleration', 'aa2', @(x) ischar(x)||isstring(x));
+params.addParameter('tol_stop', 1e-4, @(x) isnumeric(x));
+params.addParameter('acceleration', 'aa2', @(x) ismember(x,{'original','inertia','aa2'}));
 params.addParameter('early_termination', true, @(x) islogical(x));
 params.addParameter('mem_size', 5, @(x) isnumeric(x));
 params.addParameter('eta', 1e-8, @(x) isnumeric(x));
@@ -38,6 +37,7 @@ type = params.Results.type;
 groups = params.Results.groups;
 ngroup = length(groups);
 gamma = params.Results.gamma;
+splitting = params.Results.splitting;
 max_iter = params.Results.max_iter;
 tol_stop = params.Results.tol_stop;
 acceleration = params.Results.acceleration;
@@ -45,6 +45,7 @@ early_termination = params.Results.early_termination;
 mem_size = params.Results.mem_size;
 eta = params.Results.eta;
 params_fixed = struct();
+params_fixed.splitting = splitting;
 params_fixed.max_iter = max_iter;
 params_fixed.tol = tol_stop;
 params_fixed.early_termination = early_termination;
@@ -58,14 +59,19 @@ p = size(X,2);
 center = mean(X);
 scale = sqrt(sum((X - center).^2)); % there is a 1/n inside the sqrt if there is a 1/n in the least squared loss
 X = (X - center)./scale;
-y = y -mean(y);
+y = y - mean(y);
 
 %
 Xt = X';
 rho = norm(X)^2;
 A = @(x) X*x;
 AH = @(x) Xt*x;
-mu = 1.99/(rho*(1-2*gamma+2*gamma^2)/(1-gamma));
+if strcmp(splitting,'FB')
+    mu = 1.99/(rho*(1-2*gamma+2*gamma^2)/(1-gamma));
+elseif strcmp(splitting,'FBF')
+    gamma_matrix = [1-gamma,gamma;-gamma,gamma];
+    mu = 0.99/(rho*norm(gamma_matrix));
+end
 Xty = Xt*y;
 if strcmp(type,'single')
     lambda_max = max(abs(Xty));
@@ -79,7 +85,7 @@ lambda = lambda_max*lambda_ratio;
 x0 = zeros(p,1);
 v0 = zeros(p,1);
 xv0 = [x0;v0];
-[xv_lambda, iter, res_norm_hist] = fixed_iter(xv0,@F1,params_fixed,acceleration);
+[xv_lambda, iter, res_norm_hist] = fixed_iter(xv0,@forward,@backward,params_fixed,acceleration);
 fprintf('lambda = %f solved in %d iterations\n', lambda, iter);
 
 %unstandardize the estimates 
@@ -88,12 +94,20 @@ xhat = bb./scale';
 intercept = mean(y) - center*bb;
 vhat = xv_lambda((p+1):(2*p));
 
+%xhat = xv_lambda(1:p);
+%vhat = xv_lambda((p+1):(2*p));
 
-function xv_next = F1(xv)
+function zxv = forward(xv)
     x = xv(1:p,1);
     v = xv((p+1):(2*p),1);
     zx = x - mu * ( AH(A(x + gamma*(v-x))) - Xty);
     zv = v - mu * ( gamma * AH(A(v-x)) );
+    zxv = [zx;zv];
+end   
+
+function xv_next = backward(zxv)
+    zx = zxv(1:p,1);
+    zv = zxv((p+1):(2*p),1);
     if strcmp(type,'single')
         x = soft(zx, mu * lambda);
         v = soft(zv, mu * lambda);

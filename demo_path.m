@@ -10,19 +10,18 @@ y = (y-mean(y))/std(y);
 X = normc(X);
 
 tic
-xhat_matrix1 = srls_GMC_path(y, X, type="single", acceleration="aa2", screen=false, gamma=0.8);
+xhat_matrix1 = srls_GMC_path(y, X, type="single", acceleration="aa2", screen=true, gamma=0.8, splitting='FB');
 toc
 tic
-xhat_matrix2 = srls_GMC_path(y, X, type="single", acceleration="aa2", screen=true, gamma=0.8);
+xhat_matrix2 = srls_GMC_path(y, X, type="single", acceleration="aa2", screen=true, gamma=0.8, splitting='FBF');
 toc
 norm(xhat_matrix1-xhat_matrix2)/norm(xhat_matrix2)
 
 tic
-xhat_matrix1 = srls_GMC_path(y, X, type="grouped", screen=false, lambda_min_ratio=0.01,groups=groups);
+xhat_matrix1 = srls_GMC_path(y, X, type="grouped", screen=true, lambda_min_ratio=0.01,groups=groups, splitting='FB');
 toc
 tic
-%acceleration can also be nesterov
-xhat_matrix2 = srls_GMC_path(y, X, type="grouped",screen=true, lambda_min_ratio=0.01 ,groups=groups);
+xhat_matrix2 = srls_GMC_path(y, X, type="grouped",screen=true, lambda_min_ratio=0.01 ,groups=groups, splitting='FBF');
 toc
 norm(xhat_matrix1-xhat_matrix2)/norm(xhat_matrix2)
 

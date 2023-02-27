@@ -1,4 +1,4 @@
-function [xhat_matrix, vhat_matrix, lambda_seq] = srls_GMC_path(y, X, varargin)
+function [xhat_matrix, vhat_matrix, intercept, lambda_seq] = srls_GMC_path(y, X, varargin)
 
 % [xhat_matrix, vhat_matrix] = srls_GMC_path(y, X, varargin)
 %
@@ -23,14 +23,14 @@ params = inputParser;
 params.addParameter('type', 'single', @(x) ischar(x)||isstring(x));
 params.addParameter('groups', {}, @(x) iscell(x));
 params.addParameter('gamma', 0.8, @(x) isnumeric(x));
+params.addParameter('splitting', 'FB', @(x) ismember(x,{'DR','FB','FBF'}));
 params.addParameter('max_iter', 10000, @(x) isnumeric(x));
 params.addParameter('tol_stop', 1e-5, @(x) isnumeric(x));
-params.addParameter('tol_kkt', 1e-2, @(x) isnumeric(x));
 params.addParameter('lambda_min_ratio', 0.01, @(x) isnumeric(x));
 params.addParameter('screen_off_ratio', 0.05, @(x) isnumeric(x));
 params.addParameter('nlambda', 100, @(x) isnumeric(x));
 params.addParameter('screen', true, @(x) islogical(x));
-params.addParameter('acceleration', 'aa2', @(x) ischar(x)||isstring(x));
+params.addParameter('acceleration', 'aa2', @(x) ismember(x,{'original','inertia','aa2'}));
 params.addParameter('early_termination', true, @(x) islogical(x));
 params.addParameter('mem_size', 5, @(x) isnumeric(x));
 params.addParameter('eta', 1e-8, @(x) isnumeric(x));
@@ -43,9 +43,9 @@ type = params.Results.type;
 groups = params.Results.groups;
 ngroup = length(groups);
 gamma = params.Results.gamma;
+splitting = params.Results.splitting;
 max_iter = params.Results.max_iter;
 tol_stop = params.Results.tol_stop;
-tol_kkt = params.Results.tol_kkt;
 lambda_min_ratio = params.Results.lambda_min_ratio;
 screen_off_ratio = params.Results.screen_off_ratio;
 nlambda = params.Results.nlambda;
@@ -55,6 +55,7 @@ early_termination = params.Results.early_termination;
 mem_size = params.Results.mem_size;
 eta = params.Results.eta;
 params_fixed = struct();
+params_fixed.splitting = splitting;
 params_fixed.max_iter = max_iter;
 params_fixed.tol = tol_stop;
 params_fixed.early_termination = early_termination;
@@ -75,7 +76,12 @@ Xt = X';
 rho = norm(X)^2;
 A = @(x) X*x;
 AH = @(x) Xt*x;
-mu = 1.99 / ( rho * (1-2*gamma+2*gamma^2)/(1-gamma) ) ;
+if strcmp(splitting,'FB')
+    mu = 1.99/(rho*(1-2*gamma+2*gamma^2)/(1-gamma));
+elseif strcmp(splitting,'FBF')
+    gamma_matrix = [1-gamma,gamma;-gamma,gamma];
+    mu = 0.99/(rho*norm(gamma_matrix));
+end
 Xty = Xt*y;
 if strcmp(type,'single')
     lambda_max = max(abs(Xty));
@@ -139,7 +145,7 @@ for i = 2:nlambda
             x_current_a = x_current(a,1);
             v_current_a = v_current(a,1);
             xv_current_a = [x_current_a;v_current_a];
-            [xv_lambda_a, iter] = fixed_iter(xv_current_a,@F1,params_fixed,acceleration);
+            [xv_lambda_a, iter] = fixed_iter(xv_current_a,@forward1,@backward1,params_fixed,acceleration);
             fprintf('lambda = %f solved in %d iterations\n', lambda, iter);
             x_lambda = zeros(p,1);
             v_lambda = zeros(p,1);
@@ -174,26 +180,32 @@ for i = 2:nlambda
         % unstandardization
         bb = x_lambda;
         xhat_matrix(i,:) = bb./scale';
-        intercept(i, :) = mean(y) - center*bb;
+        intercept(i) = mean(y) - center*bb;
         vhat_matrix(i,:) = v_lambda;
     else
-        [xv_lambda, iter] = fixed_iter(xv_current,@F2,params_fixed,acceleration);
+        [xv_lambda, iter] = fixed_iter(xv_current,@forward2,@backward2,params_fixed,acceleration);
         fprintf('lambda = %f solved in %d iterations\n', lambda, iter);
         % unstandardization
         bb = xv_lambda(1:p);
         xhat_matrix(i,:) = bb./scale';
-        intercept(i, :) = mean(y) - center*bb;       
+        intercept(i) = mean(y) - center*bb;       
         vhat_matrix(i,:) = xv_lambda((p+1):2*p);
     end
     
  
 end
 
-function xv_next = F1(xv)
+function zxv = forward1(xv)
     x = xv(1:p_a,1);
     v = xv((p_a+1):(2*p_a),1);
     zx = x - mu * ( AH_a(A_a(x + gamma*(v-x))) - Xty_a);
     zv = v - mu * ( gamma * AH_a(A_a(v-x)) );
+    zxv = [zx;zv];
+end
+
+function xv_next = backward1(zxv)
+    zx = zxv(1:p_a,1);
+    zv = zxv((p_a+1):(2*p_a),1);
     if strcmp(type,'single')
         x = soft(zx, mu * lambda);
         v = soft(zv, mu * lambda);
@@ -204,11 +216,17 @@ function xv_next = F1(xv)
     xv_next = [x;v];
 end
 
-function xv_next = F2(xv)
+function zxv = forward2(xv)
     x = xv(1:p,1);
     v = xv((p+1):(2*p),1);
     zx = x - mu * ( AH(A(x + gamma*(v-x))) - Xty);
     zv = v - mu * ( gamma * AH(A(v-x)) );
+    zxv = [zx;zv];
+end
+
+function xv_next = backward2(zxv)
+    zx = zxv(1:p,1);
+    zv = zxv((p+1):(2*p),1);
     if strcmp(type,'single')
         x = soft(zx, mu * lambda);
         v = soft(zv, mu * lambda);
