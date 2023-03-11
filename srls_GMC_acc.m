@@ -23,7 +23,7 @@ params.addParameter('groups', {}, @(x) iscell(x));
 params.addParameter('gamma', 0.8, @(x) isnumeric(x));
 params.addParameter('splitting', 'FB', @(x) ismember(x,{'DR','FB','FBF'}));
 params.addParameter('max_iter', 10000, @(x) isnumeric(x));
-params.addParameter('tol_stop', 1e-4, @(x) isnumeric(x));
+params.addParameter('tol_stop', 1e-5, @(x) isnumeric(x));
 params.addParameter('acceleration', 'aa2', @(x) ismember(x,{'original','inertia','aa2'}));
 params.addParameter('early_termination', true, @(x) islogical(x));
 params.addParameter('mem_size', 5, @(x) isnumeric(x));

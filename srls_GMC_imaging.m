@@ -62,12 +62,12 @@ elseif strcmp(app,'matrix completion')
     BHB = @(x) gamma/lambda*AHA(x);
 end
 xv0 = [y(:);0*y(:)];
-if strcmp(splitting,'FBF') && strcmp(app,'matrix completion')
+if strcmp(splitting,'FBF') %&& strcmp(app,'matrix completion')
     gamma_matrix = [1-gamma,gamma;-gamma,gamma];
     %mu = 1.99/(rho*(1-2*gamma+2*gamma^2)/(1-gamma))
-    mu = 0.99/(rho*norm(gamma_matrix));
+    mu = 0.99/(rho*norm(gamma_matrix))
 else
-    mu = 1.99/(rho*(1-2*gamma+2*gamma^2)/(1-gamma));
+    mu = 1.99/(rho*(1-2*gamma+2*gamma^2)/(1-gamma))
 end
 [xv_lambda, iter, res_norm_hist] = fixed_iter(xv0,@forward,@backward,params_fixed,acceleration);
 xhat = reshape(xv_lambda(1:(n1*n2)),[n1,n2]);
@@ -83,15 +83,25 @@ function zxv = forward(xv)
 end
 
 function xv_next = backward(zxv)
-    zx = reshape(zxv(1:(n1*n2)),[n1,n2]);
-    zv = reshape(zxv((n1*n2+1):(2*n1*n2)), [n1,n2]);
     if strcmp(app,'matrix completion')
+        zx = reshape(zxv(1:(n1*n2)),[n1,n2]);
+        zv = reshape(zxv((n1*n2+1):(2*n1*n2)), [n1,n2]);
         x = svt(zx, mu * lambda);
         v = svt(zv, mu * lambda);
+        xv_next = [x(:);v(:)];
     else
-        x = chambolle_prox_TV_stop(zx, lambda = mu * lambda);
-        v = chambolle_prox_TV_stop(zv, lambda = mu * lambda);
+%         if strcmp(splitting,'FBF')
+%             zx_flat = zxv(1:(n1*n2));
+%             zv_flat = zxv((n1*n2+1):(2*n1*n2));
+%             x = SB_ITV(zx_flat,mu*lambda);
+%             v = SB_ITV(zv_flat,mu*lambda);
+%             xv_next = [x;v];
+%         else 
+        zx = reshape(zxv(1:(n1*n2)),[n1,n2]);
+        zv = reshape(zxv((n1*n2+1):(2*n1*n2)), [n1,n2]);
+        x = chambolle_prox_TV_stop(zx, lambda = mu * lambda, maxiter = 25);
+        v = chambolle_prox_TV_stop(zv, lambda = mu * lambda, maxiter = 25);
+        xv_next = [x(:);v(:)];
     end
-    xv_next = [x(:);v(:)];
 end
 end
