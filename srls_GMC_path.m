@@ -68,7 +68,7 @@ params_fixed.eta = eta;
 n = size(X,1);
 p = size(X,2);
 center = mean(X);
-scale = sqrt(sum((X - center).^2)); % there is a 1/n inside the sqrt if there is a 1/n in the least squared loss
+scale = sqrt(sum((X - center).^2)/n);
 X = (X - center)./scale;
 y = y -mean(y);
 
