@@ -26,6 +26,7 @@ params.addParameter('gamma', 0.8, @(x) isnumeric(x));
 params.addParameter('splitting', 'FB', @(x) ismember(x,{'DR','FB','FBF'}));
 params.addParameter('max_iter', 10000, @(x) isnumeric(x));
 params.addParameter('tol_stop', 1e-5, @(x) isnumeric(x));
+params.addParameter('lambda_seq', double.empty(0,1), @(x) isvector(x));
 params.addParameter('lambda_min_ratio', 0.01, @(x) isnumeric(x));
 params.addParameter('screen_off_ratio', 0.05, @(x) isnumeric(x));
 params.addParameter('nlambda', 100, @(x) isnumeric(x));
@@ -48,6 +49,7 @@ max_iter = params.Results.max_iter;
 tol_stop = params.Results.tol_stop;
 lambda_min_ratio = params.Results.lambda_min_ratio;
 screen_off_ratio = params.Results.screen_off_ratio;
+lambda_seq = params.Results.lambda_seq;
 nlambda = params.Results.nlambda;
 screen = params.Results.screen;
 acceleration = params.Results.acceleration;
@@ -83,16 +85,23 @@ elseif strcmp(splitting,'FBF')
     mu = 0.99/(rho*norm(gamma_matrix));
 end
 Xty = Xt*y;
-if strcmp(type,'single')
-    lambda_max = max(abs(Xty));
+if isempty(lambda_seq)
+    if strcmp(type,'single')
+        lambda_max = max(abs(Xty));
+    else
+        group_lens = cellfun(@(x) size(x,2), groups);
+        Ks = sqrt(group_lens);
+        lambda_max = max(group_norm_vec(Xty,groups)./Ks',[],'all');
+    end
+    lambda_min = lambda_min_ratio*lambda_max;
+    inc = -(lambda_max-lambda_min)/(nlambda-1);
+    lambda_seq = lambda_max:inc:lambda_min;
 else
-    group_lens = cellfun(@(x) size(x,2), groups);
-    Ks = sqrt(group_lens);
-    lambda_max = max(group_norm_vec(Xty,groups)./Ks',[],'all');
+    lambda_max = max(lambda_seq);
+    lambda_min = min(lambda_seq);
+
 end
-lambda_min = lambda_min_ratio*lambda_max;
-inc = -(lambda_max-lambda_min)/(nlambda-1);
-lambda_seq = lambda_max:inc:lambda_min;
+
 
 
 % initialization
