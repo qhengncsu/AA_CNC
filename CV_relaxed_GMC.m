@@ -167,7 +167,7 @@ end
 for ii = 1:length(alpha_seq)
     % fix the alpha for relaxed GMC
     alpha = alpha_seq(ii);
-    cv.err = CV.err{i,1};
+    cv.err = CV.err{ii,1};
     % compute cve, cvse, lambda_min etc. at the given alpha
     cv.cve  = squeeze( mean(cv.err,1) );
     cv.cvse = squeeze( std(cv.err,0,1));
