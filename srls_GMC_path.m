@@ -86,16 +86,18 @@ elseif strcmp(splitting,'FBF')
 end
 Xty = Xt*y;
 if isempty(lambda_seq)
+ 
     if strcmp(type,'single')
         lambda_max = max(abs(Xty));
     else
         group_lens = cellfun(@(x) size(x,2), groups);
         Ks = sqrt(group_lens);
-        lambda_max = max(group_norm_vec(Xty,groups)./Ks',[],'all');
+        lambda_max = max(group_norm_vec(Xty,groups)./Ks,[],'all');
     end
     lambda_min = lambda_min_ratio*lambda_max;
     inc = -(lambda_max-lambda_min)/(nlambda-1);
     lambda_seq = lambda_max:inc:lambda_min;
+  
 else
     lambda_max = max(lambda_seq);
     lambda_min = min(lambda_seq);
