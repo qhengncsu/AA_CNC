@@ -6,6 +6,9 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
     cg_check = 0;
     res_norm_hist = zeros(max_iter,1);
     early_termination = params.early_termination;
+    if strcmp(splitting,'DY')
+        projection = params.projection;
+    end
     z = z0;
     iter = 0;
     if strcmp(acceleration, 'original')
@@ -20,6 +23,11 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
                 z_fbf = forward(z_fb);
                 res = z_f - z_fbf;
                 Fz = z - res;
+            elseif strcmp(splitting,'DY')
+                z_Q = backward(z);
+                z_R = projection(2.*z_Q - z- forward(z_Q));
+                Fz = z-z_Q+z_R;
+                res = z - Fz;
             end
             res_norm = norm(res);
             res_norm_hist(iter) = res_norm;
@@ -115,6 +123,10 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
             z_fb = backward(z_f);
             z_fbf = forward(z_fb);
             zk = zk_1 - z_f + z_fbf; 
+        elseif strcmp(splitting, 'DY')
+            z_Q = backward(zk_1);
+            z_R = projection(2.*z_Q - zk_1- forward(z_Q));
+            zk = zk_1-z_Q+z_R;
         end
         Zk = zk;
         gk_1 = zk_1 - zk;
@@ -135,6 +147,11 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
                 gk_fb = zk - z_fb;
                 gk = z_f - z_fbf;
                 zkp1_OS = zk - gk;
+            elseif strcmp(splitting,'DY')
+                z_Q = backward(zk);
+                z_R = projection(2.*z_Q - zk- forward(z_Q));
+                zkp1_OS = zk-z_Q+z_R;
+                gk = zk-zkp1_OS;
             end
             if iter <= mem_size    
                 Zk(:, iter+1) = zkp1_OS;
@@ -151,7 +168,7 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
             gamma_k = (Yk' * Yk + (eta*(Sk_norm2+Yk_norm2)+1e-14)*diag(e))\(Yk' * gk);
             alpha_k = [gamma_k(1);gamma_k(2:end)-gamma_k(1:(end-1));1-gamma_k(end)];
             zkp1_aa = Zk*alpha_k;
-            if ismember(splitting,{'FB','DR'}) && norm(gk)<=D*norm_g0*(i+1)^(-1-epsilon)
+            if ismember(splitting,{'FB','DR','DY'}) && norm(gk)<=D*norm_g0*(i+1)^(-1-epsilon)
                 zk = zkp1_aa;
                 i = i+1;
             elseif strcmp(splitting, 'FBF') && norm(gk_fb)<=0.5*D*norm_g0*(i+1)^(-1-epsilon)
@@ -174,11 +191,15 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
                     cg_check = 0;
                 end
                 if cg_check >= 10
-                    z = backward(forward(zk));
                     break
                 end
             end
         end
-        z = backward(forward(zk));
-    end 
+        z = zk;
+    end
+    if strcmp(splitting, 'DY')
+        z = backward(z);
+    elseif strcmp(splitting, 'FBF')
+        z = backward(forward(z));
+    end
 end
