@@ -84,7 +84,8 @@ alpha_seq = params.Results.alpha_seq;
 % X = (X - center)./scale;
 % y = y -mean(y);
 
-% Compute lambda sequence
+% Compute solution path using the full data set
+% also compute lambda_seq if it's not provided by the user
 [xhat_matrix, vhat_matrix, intercept, lambda_seq] = srls_GMC_path(y, X, 'gamma', gamma,...
               'type', type, 'groups', groups, 'lambda_seq', lambda_seq, 'splitting',splitting, ...
                'max_iter', max_iter, 'tol_stop', tol_stop,'lambda_min_ratio', lambda_min_ratio, ...
@@ -101,7 +102,7 @@ CV.nfolds = nfolds;
 % start CV
 k  = nfolds;
 CV.err = {};
-cv.err = nan(nfolds, length(lambda_seq));
+err_vec = nan(1, length(lambda_seq));
 for i=1:k
     % get the training and test set for this fold
     testidx = i:k:n;
@@ -119,7 +120,7 @@ for i=1:k
         'screen_off_ratio', screen_off_ratio, 'nlambda', nlambda,'screen', screen, ...
         'acceleration', acceleration, 'early_termination', early_termination,...
         'mem_size',mem_size, 'eta', eta);
-    
+   % norm(train_xmatrix)
     % refit
     refit_xmatrix = nan(length(lambda_seq), p);
     for j = 1:length(lambda_seq)
@@ -132,6 +133,7 @@ for i=1:k
         beta_hat(find(train_xmatrix(j, :)~=0))=refit.Coefficients.Estimate;
         refit_xmatrix(j, :) = beta_hat;
     end
+  
     
     for ii = 1:length(alpha_seq)
         % fix the alpha for relaxed GMC
@@ -141,9 +143,9 @@ for i=1:k
         
         % compute fit to test data
         for j=1:length(lambda_seq)
-            cv.err(i,j) = norm(ytest - Xtest*relaxed_xmatrix(j, :)');
+            err_vec(1,j) = norm(ytest - Xtest*relaxed_xmatrix(j, :)');
         end
-        CV.err{ii, 1} = cv.err;
+        CV.err{ii, i} = err_vec;
     end
     
 end
@@ -167,7 +169,12 @@ end
 for ii = 1:length(alpha_seq)
     % fix the alpha for relaxed GMC
     alpha = alpha_seq(ii);
-    cv.err = CV.err{ii,1};
+    % collect the cv error matrix    
+    cv.err = nan(nfolds, length(lambda_seq));
+    for j = 1:nfolds
+        cv.err(j,:)= CV.err{ii,j};
+    end
+    CV.Errmat{ii, 1} = cv.err;
     % compute cve, cvse, lambda_min etc. at the given alpha
     cv.cve  = squeeze( mean(cv.err,1) );
     cv.cvse = squeeze( std(cv.err,0,1));
