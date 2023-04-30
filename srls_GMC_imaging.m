@@ -1,6 +1,6 @@
 function [xhat, vhat, res_norm_hist] = srls_GMC_imaging(y, app, lambda, varargin)
 
-% [xhat, vhat, res_norm_hist] = srls_GMC_imaging(y, X, varargin)
+% [xhat, vhat, res_norm_hist] = srls_GMC_imaging(y, app, lambda, varargin)
 % INPUT
 %   y 	    observed image
 %   app     'deblurring' or 'inpainting' or 'matrix completion'
@@ -9,7 +9,7 @@ function [xhat, vhat, res_norm_hist] = srls_GMC_imaging(y, app, lambda, varargin
 %   xhat, vhat, res_norm_hist
 params = inputParser;
 params.addParameter('H', fspecial('average',5), @(x) isnumeric(x));
-params.addParameter('gamma', 0.98, @(x) isnumeric(x));
+params.addParameter('gamma', 0.8, @(x) isnumeric(x));
 params.addParameter('splitting', 'FBF', @(x) ismember(x,{'DR','FB','FBF'}));
 params.addParameter('max_iter', 10000, @(x) isnumeric(x));
 params.addParameter('tol_stop', 1e-5, @(x) isnumeric(x));
@@ -47,19 +47,19 @@ if strcmp(app,'deblurring')
     AH = @(x) imfilter(x,H,'circular');
     AHy = AH(y);
     AHA = @(x) AH(A(x));
-    B = @(x) sqrt(gamma/lambda)*imfilter(x,H,'circular');
-    BH = @(x) sqrt(gamma/lambda)*imfilter(x,H,'circular');
-    BHB = @(x) BH(B(x));
+    %B = @(x) sqrt(gamma/lambda)*imfilter(x,H,'circular');
+    %BH = @(x) sqrt(gamma/lambda)*imfilter(x,H,'circular');
+    %BHB = @(x) BH(B(x));
 elseif strcmp(app,'inpainting')
     AHA = @(x) mask.*x;
     AHy = AHA(y);
     %B = @(x) x - imfilter(x,H,'circular');
     %BHB = @(x) gamma/lambda*mask.*B(B(x));
-    BHB = @(x) gamma/lambda*AHA(x);
+    %BHB = @(x) gamma/lambda*AHA(x);
 elseif strcmp(app,'matrix completion')
     AHA = @(x) mask.*x;
     AHy = AHA(y);
-    BHB = @(x) gamma/lambda*AHA(x);
+    %BHB = @(x) gamma/lambda*AHA(x);
 end
 xv0 = [y(:);0*y(:)];
 if strcmp(splitting,'FBF') %&& strcmp(app,'matrix completion')
@@ -77,8 +77,13 @@ fprintf('lambda = %f solved in %d iterations\n', lambda, iter);
 function zxv = forward(xv)
     x = reshape(xv(1:(n1*n2)),[n1,n2]);
     v = reshape(xv((n1*n2+1):(2*n1*n2)), [n1,n2]);
-    zx = x - mu * (AHA(x)-AHy+lambda*BHB(v-x));
-    zv = v - mu * (lambda*BHB(v-x));
+    %zx = x - mu * (AHA(x)-AHy+lambda*BHB(v-x));
+    zx = x - mu * (AHA(x+gamma*(v-x))-AHy);
+    if gamma>0
+        zv = v - mu * (gamma*AHA(v-x));
+    else
+        zv = v;
+    end
     zxv = [zx(:);zv(:)];
 end
 
@@ -87,20 +92,21 @@ function xv_next = backward(zxv)
         zx = reshape(zxv(1:(n1*n2)),[n1,n2]);
         zv = reshape(zxv((n1*n2+1):(2*n1*n2)), [n1,n2]);
         x = svt(zx, mu * lambda);
-        v = svt(zv, mu * lambda);
+        if gamma>0
+        	v = svt(zv, mu * lambda);
+        else
+            v = zv;
+        end
         xv_next = [x(:);v(:)];
     else
-%         if strcmp(splitting,'FBF')
-%             zx_flat = zxv(1:(n1*n2));
-%             zv_flat = zxv((n1*n2+1):(2*n1*n2));
-%             x = SB_ITV(zx_flat,mu*lambda);
-%             v = SB_ITV(zv_flat,mu*lambda);
-%             xv_next = [x;v];
-%         else 
         zx = reshape(zxv(1:(n1*n2)),[n1,n2]);
         zv = reshape(zxv((n1*n2+1):(2*n1*n2)), [n1,n2]);
         x = chambolle_prox_TV_stop(zx, lambda = mu * lambda, maxiter = 25);
-        v = chambolle_prox_TV_stop(zv, lambda = mu * lambda, maxiter = 25);
+        if gamma>0
+        	v = chambolle_prox_TV_stop(zv, lambda = mu * lambda, maxiter = 25);
+        else
+            v = zv;
+        end
         xv_next = [x(:);v(:)];
     end
 end

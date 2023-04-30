@@ -1,4 +1,4 @@
-function [xhat_matrix, vhat_matrix, intercept, lambda_seq] = srls_GMC_path(y, X, varargin)
+function [xhat_matrix, vhat_matrix, lambda_seq] = srls_GMC_path(y, X, varargin)
 
 % [xhat_matrix, vhat_matrix] = srls_GMC_path(y, X, varargin)
 %
@@ -7,8 +7,8 @@ function [xhat_matrix, vhat_matrix, intercept, lambda_seq] = srls_GMC_path(y, X,
 %
 % Saddle point problem:
 %
-% argmin_x  argmax_v { F(x,v) =
-%  1/2 ||y - A x||^2 + lam ||x||_1 - gamma/2 ||A(x-v)||_2^2 - lam ||v||_1 }
+% argmin_x  argmax_v { H(x,v) =
+%  1/2 ||b - A x||^2 + lam ||x||_1 - gamma/2 ||A(x-v)||_2^2 - lam ||v||_1 }
 %
 % INPUT
 %   y 	    response (centered and unit length)
@@ -69,10 +69,11 @@ params_fixed.eta = eta;
 % data standardization
 n = size(X,1);
 p = size(X,2);
-center = mean(X);
-scale = sqrt(sum((X - center).^2)/n);
-X = (X - center)./scale;
-y = y -mean(y);
+% center = mean(X);
+% scale = sqrt(sum((X - center).^2)/n);
+% X = (X - center)./scale;
+% meany = mean(y);
+% y = y -meany;
 
 Xt = X';
 rho = norm(X)^2;
@@ -109,7 +110,7 @@ end
 % initialization
 xhat_matrix = zeros(nlambda,p);
 vhat_matrix = zeros(nlambda,p);
-intercept = zeros(nlambda, 1);
+%intercept = zeros(nlambda, 1);
 d_prev = zeros(p,1);
 c_prev = -Xty;
 
@@ -188,18 +189,13 @@ for i = 2:nlambda
             end
         end
         
-        % unstandardization
-        bb = x_lambda;
-        xhat_matrix(i,:) = bb./scale';
-        intercept(i) = mean(y) - center*bb;
+        xhat_matrix(i,:) = x_lambda;
         vhat_matrix(i,:) = v_lambda;
     else
         [xv_lambda, iter] = fixed_iter(xv_current,@forward2,@backward2,params_fixed,acceleration);
         fprintf('lambda = %f solved in %d iterations\n', lambda, iter);
-        % unstandardization
-        bb = xv_lambda(1:p);
-        xhat_matrix(i,:) = bb./scale';
-        intercept(i) = mean(y) - center*bb;       
+        xhat_matrix(i,:) = xv_lambda(1:p);
+        %intercept(i) = mean(y) - center*bb;       
         vhat_matrix(i,:) = xv_lambda((p+1):2*p);
     end
     

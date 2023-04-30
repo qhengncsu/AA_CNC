@@ -1,4 +1,4 @@
-function [xhat, vhat, res_norm_hist, intercept] = srls_GMC_acc(y, X, lambda_ratio, varargin)
+function [xhat, vhat, res_norm_hist] = srls_GMC_acc(y, X, lambda_ratio, varargin)
 
 % [xhat, vhat, res_norm_hist] = srls_GMC_acc(y, X, varargin)
 %
@@ -6,8 +6,8 @@ function [xhat, vhat, res_norm_hist, intercept] = srls_GMC_acc(y, X, lambda_rati
 %
 % Saddle point problem:
 %
-% argmin_x  argmax_v { F(x,v) =
-%  1/2 ||y - A x||^2 + lam ||x||_1 - gamma/2 ||A(x-v)||_2^2 - lam ||v||_1 }
+% argmin_x  argmax_v { H(x,v) =
+%  1/2 ||b - A x||^2 + lam ||x||_1 - gamma/2 ||A(x-v)||_2^2 - lam ||v||_1 }
 %
 % INPUT
 %   y 	    response (standardized)
@@ -56,10 +56,11 @@ params_fixed.eta = eta;
 % data standardization
 n = size(X,1);
 p = size(X,2);
-center = mean(X);
-scale = sqrt(sum((X - center).^2)/n); 
-X = (X - center)./scale;
-y = y - mean(y);
+% center = mean(X);
+% scale = sqrt(sum((X - center).^2)/n); 
+% X = (X - center)./scale;
+% meany = mean(y);
+% y = y - meany;
 
 %
 Xt = X';
@@ -89,9 +90,8 @@ xv0 = [x0;v0];
 fprintf('lambda = %f solved in %d iterations\n', lambda, iter);
 
 %unstandardize the estimates 
-bb = xv_lambda(1:p);
-xhat = bb./scale';
-intercept = mean(y) - center*bb;
+xhat = xv_lambda(1:p);
+%intercept = meany - center*bb;
 vhat = xv_lambda((p+1):(2*p));
 
 %xhat = xv_lambda(1:p);

@@ -1,13 +1,16 @@
-X = randn(1000,5000);
-beta = [ones(100,1);zeros(4900,1)];
+X = randn(1000,1000);
+beta = [ones(100,1);zeros(900,1)];
 y = X*beta + 0.5*randn(1000,1)*std(X*beta);
-groups = cell(50,1);
-for i=1:50
+groups = cell(10,1);
+for i=1:10
     groups{i} = ((i-1)*100+1):(i*100);
 end
 %y = randn(1000,1);
-%y = (y-mean(y))/std(y);
-%X = normc(X);
+[n, p] = size(X);
+center = mean(X);
+scale = sqrt(sum((X - center).^2)/n);
+X = (X - center)./scale;
+y = y -mean(y);
 
 %%
 tic
