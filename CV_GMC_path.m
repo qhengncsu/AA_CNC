@@ -93,9 +93,23 @@ for i=1:k
                'screen_off_ratio', screen_off_ratio, 'nlambda', nlambda,'screen', screen, ...
                 'acceleration', acceleration, 'early_termination', early_termination, 'mem_size',mem_size, 'eta', eta);
     
+    % refit 
+    refit_xmatrix = nan(length(lambda_seq), p);
+    for j = 1:length(lambda_seq)
+        % get the submatrix
+        X1 = Xtrain(:, find(train_xmatrix(j, :)~=0));
+        % refit
+        refit = fitlm(X1,ytrain, 'Intercept', false);
+        % go back to the whole vector of coefficient
+        beta_hat = zeros(1, p);
+        beta_hat(find(train_xmatrix(j, :)~=0))=refit.Coefficients.Estimate;
+        refit_xmatrix(j, :) = beta_hat;
+    end
+    
+            
     % compute fit to test data
     for j=1:length(lambda_seq)
-            cv.err(i,j) = norm(ytest - Xtest*train_xmatrix(j, :)');
+            cv.err(i,j) = norm(ytest - Xtest*refit_xmatrix(j, :)');
     end
 end
 
