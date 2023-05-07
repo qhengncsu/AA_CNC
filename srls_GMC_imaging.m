@@ -16,7 +16,7 @@ params.addParameter('tol_stop', 1e-5, @(x) isnumeric(x));
 params.addParameter('early_termination', true, @(x) islogical(x));
 params.addParameter('acceleration', 'aa2', @(x) ismember(x,{'original','inertia','aa2'}));
 params.addParameter('mask', ones(size(y)), @(x) isnumeric(x));
-params.addParameter('mem_size', 5, @(x) isnumeric(x));
+params.addParameter('mem_size', 10, @(x) isnumeric(x));
 params.addParameter('eta', 1e-8, @(x) isnumeric(x));
 params.parse(varargin{:});
 H = params.Results.H;
@@ -37,6 +37,7 @@ params_fixed.early_termination = early_termination;
 params_fixed.mem_size = mem_size;
 params_fixed.verbose = true;
 params_fixed.eta = eta;
+params_fixed.printevery = 100;
 n1 = size(y,1);
 n2 = size(y,2);
 rho = 1;
@@ -101,9 +102,9 @@ function xv_next = backward(zxv)
     else
         zx = reshape(zxv(1:(n1*n2)),[n1,n2]);
         zv = reshape(zxv((n1*n2+1):(2*n1*n2)), [n1,n2]);
-        x = chambolle_prox_TV_stop(zx, lambda = mu * lambda, maxiter = 25);
+        x = chambolle_prox_TV_stop(zx, lambda = mu * lambda, maxiter = 50);
         if gamma>0
-        	v = chambolle_prox_TV_stop(zv, lambda = mu * lambda, maxiter = 25);
+        	v = chambolle_prox_TV_stop(zv, lambda = mu * lambda, maxiter = 50);
         else
             v = zv;
         end

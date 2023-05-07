@@ -13,7 +13,7 @@ labels = arrayfun(@(x) label_map(x), labels);
 ARs_convex = zeros(20,1);
 i = 1
 for lambda=1:1:20
-    Xhat = srls_GMC_cvxcluster(U, lambda, acceleration='aa2', gamma=0, K=5, phi=0.5);
+    Xhat = srls_GMC_cvxcluster(U, lambda, acceleration='aa2', gamma=0, K=5, phi=0);
     Y = pdist(Xhat);
     Z = linkage(Y);
     %dendrogram(Z)
@@ -25,7 +25,7 @@ end
 ARs = zeros(20,1);
 i = 1
 for lambda=1:1:20
-    Xhat = srls_GMC_cvxcluster(U, lambda, acceleration='aa2', gamma=0.8, K=5, phi=0.5);
+    Xhat = srls_GMC_cvxcluster(U, lambda, acceleration='aa2', gamma=0.8, K=5, phi=0);
     Y = pdist(Xhat);
     Z = linkage(Y);
     %dendrogram(Z)

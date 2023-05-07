@@ -1,39 +1,39 @@
+rng('default')
 x = double(rgb2gray(imread('QR_code.jpg')));
-H = fspecial('average',5);
+H = fspecial('average',3);
 y = awgn(imfilter(x,H,'circular'),15,'measured');
-snr_cnc1 = zeros(12,1);
-snr_cnc2 = zeros(12,1);
-snr_cnc3 = zeros(12,1);
-snr_cnc4 = zeros(12,1);
-snr_convex = zeros(12,1);
-lambdas = 4:4:48;
+snr_cnc1 = zeros(8,1);
+snr_cnc2 = zeros(8,1);
+snr_cnc3 = zeros(8,1);
+snr_cnc4 = zeros(8,1);
+snr_convex = zeros(8,1);
+lambdas = 10:10:80;
 tic
-for i=1:12
+for i=1:8
     [xhat1, vhat1, res_norm_hist1] = srls_GMC_imaging(y, 'deblurring', lambdas(i), H=H, gamma=0.8, acceleration = 'original', splitting='FB');
     snr_cnc1(i) = snr(x,xhat1-x);
 end
 time1 = toc
 tic
-for i=1:12
+for i=1:8
     [xhat2, vhat2, res_norm_hist2] = srls_GMC_imaging(y, 'deblurring', lambdas(i), H=H, gamma=0.8, acceleration = 'aa2', splitting='FB');
     snr_cnc2(i) = snr(x,xhat2-x);
 end
 time2 = toc
 tic
-for i=1:12
+for i=1:8
     [xhat3, vhat3, res_norm_hist3] = srls_GMC_imaging(y, 'deblurring', lambdas(i), H=H, gamma=0.8, acceleration = 'original', splitting='FBF');
     snr_cnc3(i) = snr(x,xhat3-x);
 end
 time3 = toc
 tic
-for i=1:12
+for i=1:8
     [xhat4, vhat4, res_norm_hist4] = srls_GMC_imaging(y, 'deblurring', lambdas(i), H=H, gamma=0.8, acceleration = 'aa2', splitting='FBF');
     snr_cnc4(i) = snr(x,xhat4-x);
 end
 time4 = toc
-
 tic
-for i=1:12
+for i=1:8
     [xhat5, vhat5, res_norm_hist5] = srls_GMC_imaging(y, 'deblurring', lambdas(i), H=H, gamma=0, acceleration = 'aa2', splitting='FB');
     snr_convex(i) = snr(x,xhat5-x);
 end
@@ -53,7 +53,7 @@ tic
 [xhat4, ~, res_norm_hist4] = srls_GMC_imaging(y, 'deblurring', lambdas(1), H=H, gamma=0.8, acceleration = 'aa2', splitting='FBF');
 time_FBF_aa2 = toc
 
-xhat4 = srls_GMC_imaging(y, 'deblurring', lambdas(9), H=H, gamma=0.8, acceleration = 'aa2', splitting='FBF');
+xhat4 = srls_GMC_imaging(y, 'deblurring', lambdas(6), H=H, gamma=0.8, acceleration = 'aa2', splitting='FBF');
 
 
 t=tiledlayout(2,3, 'Padding', 'none', 'TileSpacing', 'compact'); 
@@ -73,7 +73,7 @@ hold on
 plot(log(res_norm_hist2), 'r-', 'LineWidth', 1.5, 'DisplayName', sprintf('aa2 (%0.0f s)',time_FB_aa2) )
 xlabel('iteration');
 ylabel('norm of redidual (log scale)');
-title('FB, lambda=4')
+title('FB, lambda=10')
 l = legend('show','Location','northeast')
 nexttile
 plot(log(res_norm_hist3), 'b-', 'LineWidth', 1.5, 'DisplayName', sprintf('original (%0.0f s)',time_FBF))
@@ -81,7 +81,7 @@ hold on
 plot(log(res_norm_hist4), 'r-', 'LineWidth', 1.5, 'DisplayName', sprintf('aa2 (%0.0f s)',time_FBF_aa2) )
 xlabel('iteration');
 ylabel('norm of redidual (log scale)');
-title('FBF, lambda=4')
+title('FBF, lambda=10')
 l = legend('show','Location','northeast')
 nexttile
 plot(lambdas,snr_convex,'b-', 'LineWidth', 1.5, 'DisplayName', sprintf('Convex, FB, aa2 (%0.0f s)',time5))
@@ -96,5 +96,5 @@ plot(lambdas,snr_cnc4,'-','color','#77AC30','LineWidth', 1.5, 'DisplayName', spr
 l = legend('show','Location','southeast')
 xlabel('lambda');
 ylabel('SNR');
-xlim([2,50])
+xlim([10,80])
 title("SNR vs lambda")
