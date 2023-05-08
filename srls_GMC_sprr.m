@@ -26,7 +26,7 @@ params_fixed.early_termination = early_termination;
 params_fixed.mem_size = mem_size;
 params_fixed.verbose = true;
 params_fixed.eta = eta;
-
+params_fixed.printevery = 100;
 n = size(X,1);
 p = size(X,2);
 L = size(Y,2);

@@ -44,7 +44,7 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
             end
             z = Fz;
             if early_termination
-                if res_norm/norm(z) < tol
+                if res_norm/(norm(z)+1) < tol
                     cg_check = cg_check + 1;
                 else
                     cg_check = 0;
@@ -202,7 +202,7 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
                 fprintf('res_norm = %f after %d iterations\n', res_norm, iter);
             end
             if early_termination
-                if res_norm/norm(zk_1) < tol
+                if res_norm/(norm(zk_1)+1) < tol
                     cg_check = cg_check + 1;
                 else
                     cg_check = 0;

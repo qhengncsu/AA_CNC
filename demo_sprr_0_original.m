@@ -1,4 +1,8 @@
-load data_mice
+%load data_mice
+X = csvread('yeastX.csv',1,1);
+Y = csvread('yeastY.csv',1,1);
+X = normalize(X);
+Y = normalize(Y);
 
 lambda1_range = logspace(1,3,10);
 lambda2_range = logspace(1,3,10);

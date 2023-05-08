@@ -1,14 +1,17 @@
-load data_mice
+%load data_mice
+X = csvread('yeastX.csv',1,1);
+Y = csvread('yeastY.csv',1,1);
+X = normalize(X);
+Y = normalize(Y);
 
-lambda1_range = logspace(1,3,10);
-lambda2_range = logspace(1,3,10);
-
+lambda1_range = logspace(0.5,2.5,10);
+lambda2_range = logspace(0.5,2.5,10);
 % Initialize a matrix to store the cross-validated R2 scores
 cv_scores = zeros(length(lambda1_range), length(lambda2_range));
 
 % Define the number of folds for cross-validation
 n_folds = 10;
-rng(1,'philox')
+rng(50,'philox')
 n_samples = size(X, 1);
 train_ratio = 2/3;
 meta_train_idx = randsample(n_samples, round(train_ratio*n_samples));

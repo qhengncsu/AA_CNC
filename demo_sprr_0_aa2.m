@@ -1,16 +1,20 @@
-load data_mice
+%load data_mice
+X = csvread('yeastX.csv',1,1);
+Y = csvread('yeastY.csv',1,1);
+X = normalize(X);
+Y = normalize(Y);
 
-lambda1_range = logspace(1,3,10);
-lambda2_range = logspace(1,3,10);
+lambda1_range = logspace(0.5,2.5,10);
+lambda2_range = logspace(0.5,2.5,10);
 
 % Initialize a matrix to store the cross-validated R2 scores
 cv_scores = zeros(length(lambda1_range), length(lambda2_range));
 
 % Define the number of folds for cross-validation
 n_folds = 10;
-rng(1,'philox')
+rng(50,'philox')
 n_samples = size(X, 1);
-train_ratio = 2/3;
+train_ratio = 1/2;
 meta_train_idx = randsample(n_samples, round(train_ratio*n_samples));
 meta_test_idx = setdiff(1:n_samples, meta_train_idx);
 X_meta_train = X(meta_train_idx, :);
@@ -40,7 +44,7 @@ for i = 1:length(lambda1_range)
             Y_val = Y_meta_train(val_idx,:);
             
             % Fit the model on the training set with the current lambda1-lambda2 pair
-            Xhat = srls_GMC_sprr(Y_train, X_train, lambda1_range(i), lambda2_range(j), 'acceleration', 'aa2', 'gamma', 0);
+            Xhat = srls_GMC_sprr(Y_train, X_train, lambda1_range(i), lambda2_range(j), 'acceleration', 'aa2', 'gamma', 0.6);
             
             % Evaluate the model on the validation set
             Y_pred_val = X_val*Xhat;
@@ -68,7 +72,7 @@ disp(['Best lambda1: ' num2str(best_lambda1)]);
 disp(['Best lambda2: ' num2str(best_lambda2)]);
 disp(['Best R2 score: ' num2str(max_r2)]);
 csvwrite('cv_scores_0_aa2.csv',cv_scores)
-Xhat = srls_GMC_sprr(Y_meta_train, X_meta_train, best_lambda1, best_lambda2, 'acceleration', 'aa2', 'gamma', 0);
+Xhat = srls_GMC_sprr(Y_meta_train, X_meta_train, best_lambda1, best_lambda2, 'acceleration', 'aa2', 'gamma', 0.6);
 Y_pred_test = X_meta_test*Xhat;
 r2_test = 1 - sum(sum((Y_meta_test - Y_pred_test).^2)) / sum(sum((Y_meta_test - mean(mean(Y_meta_test))).^2));
 disp(['test R2:' num2str(r2_test)]);

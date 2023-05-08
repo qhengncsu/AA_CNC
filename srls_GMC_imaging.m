@@ -16,7 +16,7 @@ params.addParameter('tol_stop', 1e-5, @(x) isnumeric(x));
 params.addParameter('early_termination', true, @(x) islogical(x));
 params.addParameter('acceleration', 'aa2', @(x) ismember(x,{'original','inertia','aa2'}));
 params.addParameter('mask', ones(size(y)), @(x) isnumeric(x));
-params.addParameter('mem_size', 10, @(x) isnumeric(x));
+params.addParameter('mem_size', 5, @(x) isnumeric(x));
 params.addParameter('eta', 1e-8, @(x) isnumeric(x));
 params.parse(varargin{:});
 H = params.Results.H;
@@ -37,7 +37,7 @@ params_fixed.early_termination = early_termination;
 params_fixed.mem_size = mem_size;
 params_fixed.verbose = true;
 params_fixed.eta = eta;
-params_fixed.printevery = 100;
+params_fixed.printevery = 10;
 n1 = size(y,1);
 n2 = size(y,2);
 rho = 1;
@@ -62,7 +62,7 @@ elseif strcmp(app,'matrix completion')
     AHy = AHA(y);
     %BHB = @(x) gamma/lambda*AHA(x);
 end
-xv0 = [y(:);0*y(:)];
+xv0 = full([y(:);0*y(:)]);
 if strcmp(splitting,'FBF') %&& strcmp(app,'matrix completion')
     gamma_matrix = [1-gamma,gamma;-gamma,gamma];
     %mu = 1.99/(rho*(1-2*gamma+2*gamma^2)/(1-gamma))
