@@ -6,7 +6,6 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
     cg_check = 0;
     res_norm_hist = zeros(max_iter,1);
     early_termination = params.early_termination;
-    z_length = length(z0);
     printevery = params.printevery;
     if strcmp(splitting,'DY')
         projection = params.projection;
@@ -20,23 +19,20 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
             iter = iter + 1;
             if strcmp(splitting, 'FB')
                 Fz = backward(forward(z));
-                res = z - Fz;
             elseif strcmp(splitting, 'FBF')
                 z_f = forward(z);
                 z_fb = backward(z_f);
                 z_fbf = forward(z_fb);
-                res = z_f - z_fbf;
-                Fz = z - res;
+                Fz = z - z_f + z_fbf;
             elseif strcmp(splitting,'DY')
                 z_Q = backward(z);
-                z_R = projection(2.*z_Q - z- forward(z_Q));
+                z_R = projection(z_Q - z + forward(z_Q));
                 Fz = z-z_Q+z_R;
-                res = z - Fz;
             elseif strcmp(splitting,'DK')
                 z_Q = z + backward(-z);
                 Fz = z_Q - forward(z_Q+u);
-                res = z - Fz;
             end
+            res = z - Fz;
             res_norm = norm(res);
             res_norm_hist(iter) = res_norm;
             if mod(iter,printevery)==0 && verbose
@@ -49,7 +45,7 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
                 else
                     cg_check = 0;
                 end
-                if cg_check >= 10
+                if cg_check >= 5
                     break
                 end
             end
@@ -114,7 +110,7 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
                 else
                     cg_check = 0;
                 end
-                if cg_check >= 10
+                if cg_check >= 5
                     z = Fz;
                     break
                 end
@@ -133,7 +129,7 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
             zk = zk_1 - z_f + z_fbf; 
         elseif strcmp(splitting, 'DY')
             z_Q = backward(zk_1);
-            z_R = projection(2.*z_Q - zk_1- forward(z_Q));
+            z_R = projection(z_Q - zk_1 + forward(z_Q));
             zk = zk_1-z_Q+z_R;
         elseif strcmp(splitting, 'DK')
             z_Q = zk_1 + backward(-zk_1);
@@ -145,31 +141,29 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
         res_norm_hist(1) = res_norm;
         g0 = gk_1;
         norm_g0 = norm(g0);
-        D = 1e8;
-        epsilon = 1e-8;
+        D = 1e6;
+        epsilon = 1e-6;
         i = 0;
+        total_safeguards = 0;
         while iter<=max_iter-2
             iter = iter + 1;
             if strcmp(splitting, 'FB')
                 zkp1_OS = backward(forward(zk));
-                gk = zk - zkp1_OS;
             elseif strcmp(splitting, 'FBF')
                 z_f = forward(zk);
                 z_fb = backward(z_f);
                 z_fbf = forward(z_fb);
                 gk_fb = zk - z_fb;
-                gk = z_f - z_fbf;
-                zkp1_OS = zk - gk;
+                zkp1_OS = zk - z_f + z_fbf;
             elseif strcmp(splitting,'DY')
                 z_Q = backward(zk);
-                z_R = projection(2.*z_Q - zk- forward(z_Q));
+                z_R = projection(z_Q - zk + forward(z_Q));
                 zkp1_OS = zk-z_Q+z_R;
-                gk = zk-zkp1_OS;
             elseif strcmp(splitting,'DK')
                 z_Q = zk + backward(-zk);
                 zkp1_OS = z_Q - forward(z_Q+u);
-                gk = zk-zkp1_OS;
             end
+            gk = zk - zkp1_OS;
             if iter <= mem_size    
                 Zk(:, iter+1) = zkp1_OS;
                 Yk(:, iter) = gk - gk_1;
@@ -193,6 +187,7 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
                 i = i+1;
             else
                 zk = zkp1_OS;
+                total_safeguards = total_safeguards + 1;
             end
             zk_1 = zk;
             gk_1 = gk;
@@ -207,17 +202,18 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
                 else
                     cg_check = 0;
                 end
-                if cg_check >= 10
+                if cg_check >= 5
                     break
                 end
             end
         end
         z = zk;
+        fprintf('Safeguard invoked %d times!\n', total_safeguards);
     end
     if strcmp(splitting, 'DY')
         z = backward(z);
     elseif strcmp(splitting, 'FBF')
-        z = backward(forward(z));
+        %z = projection(backward(forward(z))) ;
     elseif strcmp(splitting, 'DK')
         z = backward(-z);
     end

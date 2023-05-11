@@ -57,9 +57,9 @@ fprintf('lambda1 = %f , lambda2 = %f solved in %d iterations\n', lambda1, lambda
 function z_forward = forward(z)
     X = reshape(z(1:p*L),[p,L]);
     V = reshape(z((p*L+1):end),[p,L]);
-    zX = mu * ( AH(A(X + gamma*(V-X))) - XtY);
+    zX = X- mu * ( AH(A(X + gamma*(V-X))) - XtY);
     if gamma>0
-        zV = mu * ( gamma * AH(A(V-X)) );
+        zV = V - mu * ( gamma * AH(A(V-X)) );
     else
         zV = V;
     end

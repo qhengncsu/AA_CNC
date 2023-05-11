@@ -1,59 +1,59 @@
-x = double(checkerboard(32)*255);
+x = double(checkerboard(32));
 y = awgn(x,15,'measured');
 snr_cnc1 = zeros(10,1);
 snr_cnc2 = zeros(10,1);
 snr_cnc3 = zeros(10,1);
 snr_cnc4 = zeros(10,1);
 snr_convex = zeros(10,1);
-lambdas = 100:100:1000;
+lambdas = 1:1:10;
 mask = binornd(1, 0.2, size(x,1), size(x,2));
 tic
 for i=1:10
-    [xhat1, vhat1, res_norm_hist1] = srls_GMC_imaging(y.*mask, 'matrix completion', lambdas(i), mask=mask, gamma=0.8, acceleration = 'original', splitting='FB');
+    [xhat1, vhat1, res_norm_hist1] = srls_GMC_matrix(y.*mask, 'matrix completion', lambdas(i), mask=mask, gamma=0.8, acceleration = 'original', splitting='FB');
     snr_cnc1(i) = snr(x,xhat1-x);
 end
 time1 = toc
 tic
 for i=1:10
-    [xhat2, vhat2, res_norm_hist2] = srls_GMC_imaging(y.*mask, 'matrix completion', lambdas(i), mask=mask, gamma=0.8, acceleration = 'aa2', splitting='FB');
+    [xhat2, vhat2, res_norm_hist2] = srls_GMC_matrix(y.*mask, 'matrix completion', 1, mask=mask, gamma=0.8, acceleration = 'original', splitting='FB');
     snr_cnc2(i) = snr(x,xhat2-x);
 end
 time2 = toc
 tic
 for i=1:10
-    [xhat3, vhat3, res_norm_hist3] = srls_GMC_imaging(y.*mask, 'matrix completion', lambdas(i), mask=mask, gamma=0.8, acceleration = 'original', splitting='FBF');
+    [xhat3, vhat3, res_norm_hist3] = srls_GMC_matrix(y.*mask, 'matrix completion', lambdas(i), mask=mask, gamma=0.8, acceleration = 'original', splitting='FBF');
     snr_cnc3(i) = snr(x,xhat3-x);
 end
 time3 = toc
 tic
 for i=1:10
-    [xhat4, vhat4, res_norm_hist4] = srls_GMC_imaging(y.*mask, 'matrix completion', lambdas(i), mask=mask, gamma=0.8, acceleration = 'aa2', splitting='FBF');
+    [xhat4, vhat4, res_norm_hist4] = srls_GMC_matrix(y.*mask, 'matrix completion', lambdas(i), mask=mask, gamma=0.8, acceleration = 'original', splitting='DY', lower = -1000, upper = 1000);
     snr_cnc4(i) = snr(x,xhat4-x);
 end
 time4 = toc
 
 tic
 for i=1:10
-    [xhat5, vhat5, res_norm_hist5] = srls_GMC_imaging(y.*mask, 'matrix completion', lambdas(i), mask=mask, gamma=0, acceleration = 'aa2', splitting='FB');
+    [xhat5, vhat5, res_norm_hist5] = srls_GMC_matrix(y.*mask, 'matrix completion', lambdas(i), mask=mask, gamma=0, acceleration = 'aa2', splitting='FB');
     snr_convex(i) = snr(x,xhat5-x);
 end
 time5 = toc
 
 
 tic
-[xhat1, ~, res_norm_hist1] = srls_GMC_imaging(y.*mask, 'matrix completion', lambdas(1), mask=mask, gamma=0.8, acceleration = 'original', splitting='FB');
+[xhat1, ~, res_norm_hist1] = srls_GMC_matrix(y.*mask, 'matrix completion', lambdas(1), mask=mask, gamma=0.8, acceleration = 'original', splitting='FB');
 time_FB = toc
 tic
-[xhat2, ~, res_norm_hist2] = srls_GMC_imaging(y.*mask, 'matrix completion', lambdas(1), mask=mask, gamma=0.8, acceleration = 'aa2', splitting='FB');
+[xhat2, ~, res_norm_hist2] = srls_GMC_matrix(y.*mask, 'matrix completion', lambdas(1), mask=mask, gamma=0.8, acceleration = 'aa2', splitting='FB');
 time_FB_aa2 = toc
 tic
-[xhat3, ~, res_norm_hist3] = srls_GMC_imaging(y.*mask, 'matrix completion', lambdas(1), mask=mask, gamma=0.8, acceleration = 'original', splitting='FBF');
+[xhat3, ~, res_norm_hist3] = srls_GMC_matrix(y.*mask, 'matrix completion', lambdas(1), mask=mask, gamma=0.8, acceleration = 'original', splitting='FBF');
 time_FBF = toc
 tic
-[xhat4, ~, res_norm_hist4] = srls_GMC_imaging(y.*mask, 'matrix completion', lambdas(1), mask=mask, gamma=0.8, acceleration = 'aa2', splitting='FBF');
+[xhat4, ~, res_norm_hist4] = srls_GMC_matrix(y.*mask, 'matrix completion', lambdas(1), mask=mask, gamma=0.8, acceleration = 'aa2', splitting='FBF');
 time_FBF_aa2 = toc
 
-xhat4 = srls_GMC_imaging(y.*mask, 'matrix completion', lambdas(5), mask=mask, gamma=0.8, acceleration = 'aa2', splitting='FBF');
+xhat4 = srls_GMC_matrix(y.*mask, 'matrix completion', lambdas(5), mask=mask, gamma=0.8, acceleration = 'aa2', splitting='FBF');
 
 
 

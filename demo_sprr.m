@@ -1,9 +1,9 @@
 load data_mice
 tic
-[~,~,res_norm_hist1] = srls_GMC_sprr(Y, X, 77, 129, 'acceleration', 'original', 'gamma', 0.6);
+[Xhat,~,res_norm_hist1] = srls_GMC_sprr(Y, X, 77, 129, 'acceleration', 'original', 'gamma', 0.6);
 time_DY = toc
 tic
-[~,~,res_norm_hist2] = srls_GMC_sprr(Y, X, 77, 129, 'acceleration', 'aa2', 'gamma', 0.6);
+[Xhat,~,res_norm_hist2] = srls_GMC_sprr(Y, X, 77, 129, 'acceleration', 'aa2', 'gamma', 0.6);
 time_DY_aa2 = toc
 lambda1_range = logspace(1,3,10);
 lambda2_range = logspace(1,3,10);
