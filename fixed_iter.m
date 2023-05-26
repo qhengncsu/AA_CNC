@@ -25,9 +25,9 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
                 z_fbf = forward(z_fb);
                 Fz = z - z_f + z_fbf;
             elseif strcmp(splitting,'DY')
-                z_Q = backward(z);
-                z_R = projection(z_Q - z + forward(z_Q));
-                Fz = z-z_Q+z_R;
+                z_R = projection(z);
+                z_Q = backward(z_R - z + forward(z_R));
+                Fz = z-z_R+z_Q;
             elseif strcmp(splitting,'DK')
                 z_Q = z + backward(-z);
                 Fz = z_Q - forward(z_Q+u);
@@ -119,6 +119,8 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
     elseif strcmp(acceleration, 'aa2')
         mem_size = params.mem_size;
         eta = params.eta;
+        D = params.D;
+        xi = params.xi;
         zk_1 = z0;
         if strcmp(splitting, 'FB')
             zk = backward(forward(zk_1));
@@ -128,9 +130,9 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
             z_fbf = forward(z_fb);
             zk = zk_1 - z_f + z_fbf; 
         elseif strcmp(splitting, 'DY')
-            z_Q = backward(zk_1);
-            z_R = projection(z_Q - zk_1 + forward(z_Q));
-            zk = zk_1-z_Q+z_R;
+            z_R = projection(zk_1);
+            z_Q = backward(z_R - zk_1 + forward(z_R));
+            zk = zk_1-z_R+z_Q;
         elseif strcmp(splitting, 'DK')
             z_Q = zk_1 + backward(-zk_1);
             zk = z_Q - forward(z_Q+u);
@@ -141,7 +143,6 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
         res_norm_hist(1) = res_norm;
         g0 = gk_1;
         norm_g0 = norm(g0);
-        D = 1e6;
         epsilon = 1e-6;
         i = 0;
         total_safeguards = 0;
@@ -156,9 +157,9 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
                 gk_fb = zk - z_fb;
                 zkp1_OS = zk - z_f + z_fbf;
             elseif strcmp(splitting,'DY')
-                z_Q = backward(zk);
-                z_R = projection(z_Q - zk + forward(z_Q));
-                zkp1_OS = zk-z_Q+z_R;
+                z_R = projection(zk);
+                z_Q = backward(z_R - zk + forward(z_R));
+                zkp1_OS = zk-z_R+z_Q;
             elseif strcmp(splitting,'DK')
                 z_Q = zk + backward(-zk);
                 zkp1_OS = z_Q - forward(z_Q+u);
@@ -175,7 +176,7 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
             end
             Yk_norm2 = norm(Yk,"fro")^2;
             Sk_norm2 = sum(Sk_norms,'all');
-            left = Yk' * Yk + (eta*(Sk_norm2+Yk_norm2)+1e-14)*eye(min(mem_size,iter));
+            left = Yk' * Yk + (eta*(Sk_norm2+Yk_norm2)+xi)*eye(min(mem_size,iter));
             gamma_k = left\(Yk' * gk);
             alpha_k = [gamma_k(1);gamma_k(2:end)-gamma_k(1:(end-1));1-gamma_k(end)];
             zkp1_aa = Zk*alpha_k;
@@ -211,9 +212,7 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
         fprintf('Safeguard invoked %d times!\n', total_safeguards);
     end
     if strcmp(splitting, 'DY')
-        z = backward(z);
-    elseif strcmp(splitting, 'FBF')
-        %z = projection(backward(forward(z))) ;
+        z = projection(z);
     elseif strcmp(splitting, 'DK')
         z = backward(-z);
     end

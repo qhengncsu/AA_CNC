@@ -48,10 +48,10 @@ params_fixed.eta = 1e-8;
 params_fixed.printevery = 10;
 z0 = -dataMatrix(:);
 [z_lambda, iter, res_norm_hist] = fixed_iter(z0,@forward,@backward,params_fixed,'aa2');
-Xnew = reshape(z_lambda,[d,n]);
-imshow(Xnew')
-tolClustering = 1e2*options.stoptol;
-[cluster_id, num_cluster] = find_cluster(Xnew',tolClustering);
+xhat1 = reshape(z_lambda,[d,n]);
+imshow(xhat1')
+tolClustering = 1e4*options.stoptol;
+[cluster_id, num_cluster] = find_cluster(xhat1,tolClustering);
 
 function z_prox = forward(z)
     global dim_row d n gamma_row row_weightVec1 Ainput_row options;

@@ -16,11 +16,12 @@ params.addParameter('tol_stop', 1e-5, @(x) isnumeric(x));
 params.addParameter('early_termination', true, @(x) islogical(x));
 params.addParameter('acceleration', 'aa2', @(x) ismember(x,{'original','inertia','aa2'}));
 params.addParameter('mask', ones(size(y)), @(x) isnumeric(x));
-params.addParameter('mem_size', 5, @(x) isnumeric(x));
-params.addParameter('eta', 1e-6, @(x) isnumeric(x));
+params.addParameter('mem_size', 10, @(x) isnumeric(x));
+params.addParameter('eta', 1e-8, @(x) isnumeric(x));
 params.addParameter('printevery', 100, @(x) isnumeric(x));
 params.addParameter('lower', 0, @(x) isnumeric(x));
 params.addParameter('upper', 1, @(x) isnumeric(x));
+params.addParameter('xv0', [full(y(:));0*full(y(:))], @(x) isnumeric(x));
 params.parse(varargin{:});
 H = params.Results.H;
 gamma = params.Results.gamma;
@@ -35,6 +36,7 @@ eta = params.Results.eta;
 printevery = params.Results.printevery;
 lower = params.Results.lower;
 upper = params.Results.upper;
+xv0 = params.Results.xv0;
 params_fixed = struct();
 params_fixed.splitting = splitting;
 params_fixed.max_iter = max_iter;
@@ -44,6 +46,8 @@ params_fixed.mem_size = mem_size;
 params_fixed.verbose = true;
 params_fixed.eta = eta;
 params_fixed.printevery = printevery;
+params_fixed.D = 1;
+params_fixed.xi = 1e-14;
 n1 = size(y,1);
 n2 = size(y,2);
 rho = 1;
@@ -54,16 +58,11 @@ if strcmp(app,'deblurring')
     AH = @(x) imfilter(x,H,'circular');
     AHy = AH(y);
     AHA = @(x) AH(A(x));
-    xv0 = full([y(:);0*y(:)]);
-% elseif strcmp(app,'inpainting')
-%     AHA = @(x) mask.*x;
-%     AHy = AHA(y);
 elseif strcmp(app,'matrix completion')
     AHA = @(x) mask.*x;
     AHy = AHA(y);
-    projection = @(x) [min(max(x(1:n_total),lower),upper);x(n_total+1:end)];
+    projection = @(x) min(max(x,lower),upper);
     params_fixed.projection = projection;
-    xv0 = [full(y(:));0*full(y(:))];
 end
 
 if strcmp(splitting,'FBF') 
@@ -72,44 +71,56 @@ if strcmp(splitting,'FBF')
 else
     mu = 1.99/(rho*(1-2*gamma+2*gamma^2)/(1-gamma))
 end
-[xv_lambda, iter, res_norm_hist] = fixed_iter(xv0,@forward,@backward,params_fixed,acceleration);
-xhat = reshape(xv_lambda(1:(n1*n2)),[n1,n2]);
-vhat = reshape(xv_lambda((n1*n2+1):(2*n1*n2)), [n1,n2]);
+if gamma>0
+    [xv_lambda, iter, res_norm_hist] = fixed_iter(xv0,@forward,@backward,params_fixed,acceleration);
+    xhat = reshape(xv_lambda(1:n_total),[n1,n2]);
+    vhat = reshape(xv_lambda((n_total+1):(2*n_total)), [n1,n2]);
+else
+    [x_lambda, iter, res_norm_hist] = fixed_iter(xv0(1:n_total),@forward,@backward,params_fixed,acceleration);
+    xhat = reshape(x_lambda(1:n_total),[n1,n2]);
+    vhat = 0*xhat;
+end
 fprintf('lambda = %f solved in %d iterations\n', lambda, iter);
 
 function zxv = forward(xv)
-    x = reshape(xv(1:(n1*n2)),[n1,n2]);
-    v = reshape(xv((n1*n2+1):(2*n1*n2)), [n1,n2]);
-    zx = x - mu * (AHA(x+gamma*(v-x))-AHy);
     if gamma>0
+        x = reshape(xv(1:n_total),[n1,n2]);
+        v = reshape(xv((n_total+1):(2*n_total)), [n1,n2]);
+        zx = x - mu * (AHA(x+gamma*(v-x))-AHy);
         zv = v - mu * (gamma*AHA(v-x));
+        zxv = [zx(:);zv(:)];
     else
-        zv = v;
+        x = reshape(xv,[n1,n2]);
+        zx = x - mu * (AHA(x)-AHy);
+        zxv = zx(:);
     end
-    zxv = [zx(:);zv(:)];
 end
 
 function xv_next = backward(zxv)
     if strcmp(app,'matrix completion')
-        zx = reshape(zxv(1:(n1*n2)),[n1,n2]);
-        zv = reshape(zxv((n1*n2+1):(2*n1*n2)), [n1,n2]);
-        x = svt(zx, mu * lambda);
         if gamma>0
+            zx = reshape(zxv(1:n_total),[n1,n2]);
+            zv = reshape(zxv((n_total+1):(2*n_total)), [n1,n2]);
+            x = svt(zx, mu * lambda);
         	v = svt(zv, mu * lambda);
+            xv_next = [x(:);v(:)];
         else
-            v = zv;
+            zx = reshape(zxv,[n1,n2]);
+            x = svt(zx, mu * lambda);
+            xv_next = x(:);
         end
-        xv_next = [x(:);v(:)];
     elseif strcmp(app,'deblurring')
-        zx = reshape(zxv(1:(n1*n2)),[n1,n2]);
-        zv = reshape(zxv((n1*n2+1):(2*n1*n2)), [n1,n2]);
-        x = chambolle_prox_TV_stop(zx, 'lambda' , mu * lambda, 'maxiter' , 50);
         if gamma>0
-        	v = chambolle_prox_TV_stop(zv, 'lambda' , mu * lambda, 'maxiter' , 50);
+            zx = reshape(zxv(1:n_total),[n1,n2]);
+            zv = reshape(zxv((n_total+1):(2*n_total)), [n1,n2]);
+            x = chambolle_prox_TV_stop(zx,'lambda',mu * lambda,'maxiter',50);
+        	v = chambolle_prox_TV_stop(zv,'lambda',mu * lambda,'maxiter',50);
+            xv_next = [x(:);v(:)];
         else
-            v = zv;
+            zx = reshape(zxv,[n1,n2]);
+            x = chambolle_prox_TV_stop(zx,'lambda',mu * lambda,'maxiter',50);
+            xv_next = x(:);
         end
-        xv_next = [x(:);v(:)];
     end
 end
 end
