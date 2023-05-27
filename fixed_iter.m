@@ -1,4 +1,4 @@
-function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, acceleration)
+function [zstar, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, acceleration)
     max_iter = params.max_iter;
     verbose = params.verbose;
     splitting = params.splitting;
@@ -31,6 +31,10 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
             elseif strcmp(splitting,'DK')
                 z_Q = z + backward(-z);
                 Fz = z_Q - forward(z_Q+u);
+            elseif strcmp(splitting,'DR')
+                z_P = forward(z);
+                z_Q = backward(2*z_P-z);
+                Fz = z - z_P + z_Q;
             end
             res = z - Fz;
             res_norm = norm(res);
@@ -49,7 +53,8 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
                     break
                 end
             end
-        end     
+        end
+        zstar = z;
     % elseif strcmp(acceleration, 'nesterov')
     %     k = 1;
     %     z_prev = z;
@@ -136,6 +141,10 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
         elseif strcmp(splitting, 'DK')
             z_Q = zk_1 + backward(-zk_1);
             zk = z_Q - forward(z_Q+u);
+        elseif strcmp(splitting,'DR')
+            z_P = forward(zk_1);
+            z_Q = backward(2*z_P-zk_1);
+            zk = zk_1 - z_P + z_Q;
         end
         Zk(:,1) = zk;
         gk_1 = zk_1 - zk;
@@ -163,6 +172,10 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
             elseif strcmp(splitting,'DK')
                 z_Q = zk + backward(-zk);
                 zkp1_OS = z_Q - forward(z_Q+u);
+            elseif strcmp(splitting,'DR')
+                z_P = forward(zk);
+                z_Q = backward(2*z_P-zk);
+                zkp1_OS = zk - z_P + z_Q;
             end
             gk = zk - zkp1_OS;
             if iter <= mem_size    
@@ -208,12 +221,14 @@ function [z, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params, ac
                 end
             end
         end
-        z = zk;
+        zstar = zk;
         fprintf('Safeguard invoked %d times!\n', total_safeguards);
     end
     if strcmp(splitting, 'DY')
-        z = projection(z);
+        zstar = projection(zstar);
     elseif strcmp(splitting, 'DK')
-        z = backward(-z);
+        zstar = backward(-zstar);
+    elseif strcmp(splitting, 'DR')
+        zstar = foward(zstar);
     end
 end
