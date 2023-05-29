@@ -229,6 +229,6 @@ function [zstar, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params
     elseif strcmp(splitting, 'DK')
         zstar = backward(-zstar);
     elseif strcmp(splitting, 'DR')
-        zstar = foward(zstar);
+        zstar = forward(zstar);
     end
 end
