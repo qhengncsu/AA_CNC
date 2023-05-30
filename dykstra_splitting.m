@@ -1,5 +1,5 @@
-function [xhat, res_norm_hist] = dykstra(y, app, lambda, varargin)
-% [xhat, vhat, res_norm_hist] = dykstra(y, app, lambda, varargin)
+function [xhat, res_norm_hist] = dykstra_splitting(y, app, lambda, varargin)
+% [xhat, vhat, res_norm_hist] = dykstra_splitting(y, app, lambda, varargin)
 % INPUT
 %   y 	    observed matrix
 %   app     'closest kinship' or 'biclustering'
@@ -11,8 +11,8 @@ params.addParameter('max_iter', 10000, @(x) isnumeric(x));
 params.addParameter('tol_stop', 1e-5, @(x) isnumeric(x));
 params.addParameter('early_termination', true, @(x) islogical(x));
 params.addParameter('acceleration', 'aa2', @(x) ismember(x,{'original','aa2'}));
-params.addParameter('mem_size', 5, @(x) isnumeric(x));
-params.addParameter('eta', 1e-6, @(x) isnumeric(x));
+params.addParameter('mem_size', 10, @(x) isnumeric(x));
+params.addParameter('eta', 1e-8, @(x) isnumeric(x));
 params.addParameter('printevery', 100, @(x) isnumeric(x));
 params.addParameter('z0', y(:), @(x) isnumeric(x));
 params.parse(varargin{:});
@@ -33,43 +33,44 @@ params_fixed.mem_size = mem_size;
 params_fixed.verbose = true;
 params_fixed.eta = eta;
 params_fixed.printevery = printevery;
-params_fixed.D = 1e6;
-params_fixed.eta = 1e-6;
+params_fixed.D = 1;
 params_fixed.xi = 1e-14;
 n1 = size(y,1);
 n2 = size(y,2);
-addpath(strcat(pwd,'/Solver.p/'));
-addpath(strcat(pwd,'/utils/'));
-[dim_row.d,dim_row.n] = size(y);
-[dim_col.d,dim_col.n] = size(y');
-k_n = 10;
-phi = 0.01;
-[row_weightVec,row_NodeArcMatrix] = compute_weight(y,k_n,phi,1);
-[col_weightVec,col_NodeArcMatrix] = compute_weight(y',k_n,phi,1);
-row_weightVec = row_weightVec/sum(row_weightVec,"all")/sqrt(n1);
-col_weightVec = col_weightVec/sum(col_weightVec,"all")/sqrt(n2);
-
-options.stoptol = 1e-6; %% tolerance for terminating the algorithm
-options.num_k = k_n; %%number of nearest neighbors
-A0_row = row_NodeArcMatrix;
-Ainput_row.A = A0_row;
-Ainput_row.Amap = @(x) x*A0_row;
-Ainput_row.ATmap = @(x) x*A0_row';
-Ainput_row.ATAmat = A0_row*A0_row'; %%graph Laplacian
-Ainput_row.ATAmap = @(x) x*Ainput_row.ATAmat;
-dim_row.E = length(row_weightVec);
-A0_col = col_NodeArcMatrix;
-Ainput_col.A = A0_col;
-Ainput_col.Amap = @(x) x*A0_col;
-Ainput_col.ATmap = @(x) x*A0_col';
-Ainput_col.ATAmat = A0_col*A0_col'; %%graph Laplacian
-Ainput_col.ATAmap = @(x) x*Ainput_col.ATAmat;
-dim_col.E = length(col_weightVec);
-options.use_kkt = 1;
-options.printyes = 0;
-options.printminoryes = 0;
-options.maxiter = 1000;
-options.admm_iter = 50;
+if strcmp(app,'biclustering')
+    addpath(strcat(pwd,'/Solver.p/'));
+    addpath(strcat(pwd,'/utils/'));
+    [dim_row.d,dim_row.n] = size(y);
+    [dim_col.d,dim_col.n] = size(y');
+    k_n = 10;
+    phi = 0.01;
+    [row_weightVec,row_NodeArcMatrix] = compute_weight(y,k_n,phi,1);
+    [col_weightVec,col_NodeArcMatrix] = compute_weight(y',k_n,phi,1);
+    row_weightVec = row_weightVec/sum(row_weightVec,"all")/sqrt(n1);
+    col_weightVec = col_weightVec/sum(col_weightVec,"all")/sqrt(n2);
+    
+    options.stoptol = 1e-6; %% tolerance for terminating the algorithm
+    options.num_k = k_n; %%number of nearest neighbors
+    A0_row = row_NodeArcMatrix;
+    Ainput_row.A = A0_row;
+    Ainput_row.Amap = @(x) x*A0_row;
+    Ainput_row.ATmap = @(x) x*A0_row';
+    Ainput_row.ATAmat = A0_row*A0_row'; %%graph Laplacian
+    Ainput_row.ATAmap = @(x) x*Ainput_row.ATAmat;
+    dim_row.E = length(row_weightVec);
+    A0_col = col_NodeArcMatrix;
+    Ainput_col.A = A0_col;
+    Ainput_col.Amap = @(x) x*A0_col;
+    Ainput_col.ATmap = @(x) x*A0_col';
+    Ainput_col.ATAmat = A0_col*A0_col'; %%graph Laplacian
+    Ainput_col.ATAmap = @(x) x*Ainput_col.ATAmat;
+    dim_col.E = length(col_weightVec);
+    options.use_kkt = 1;
+    options.printyes = 0;
+    options.printminoryes = 0;
+    options.maxiter = 1000;
+    options.admm_iter = 50;
+end
 [z_lambda, iter, res_norm_hist] = fixed_iter(-z0,@resolveP,@resolveQ,params_fixed,acceleration);
 xhat = reshape(z_lambda(1:(n1*n2)),[n1,n2]);
 fprintf('lambda = %f solved in %d iterations\n', lambda, iter);

@@ -4,7 +4,7 @@ p = 5e3;
 %%
 rng(2023)
 % use sparse matrix
-s = 0.9; % sparsity ratio, a alrger sparsity ratio leads to higher speed up ratio
+s = 0.1; % sparsity ratio, a alrger sparsity ratio leads to higher speed up ratio
 A = randn(n, p);
 a = A(:);
 a(randsample(n*p, s*n*p)) = 0;
