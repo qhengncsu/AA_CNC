@@ -42,7 +42,6 @@ params_fixed.D = 1;
 params_fixed.eta = eta;
 params_fixed.xi = 1e-14;
 p = size(A,2);
-
 if strcmp(splitting,'DR')
     A_mat = sparse(A'*A + eye(p)/mu);
 else
@@ -50,7 +49,6 @@ else
     AH = @(x) A'*x;
 end
 Atb = A'*b;
-
 [xhat, iter, res_norm_hist] = fixed_iter(z0,@resolveP,@resolveQ,params_fixed,acceleration);
 
 fprintf('Problem solved in %d iterations\n', iter);

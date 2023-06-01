@@ -8,7 +8,7 @@ s = 0.99; % sparsity ratio, a alrger sparsity ratio leads to higher speed up rat
 A = randn(n, p);
 a = A(:);
 a(randsample(n*p, s*n*p)) = 0;
-A = reshape(a, [n, p]);
+A = sparse(reshape(a, [n, p]));
 
 b = randn(n, 1);
 mu = 1.99/norm(A'*A);
@@ -19,11 +19,11 @@ app = 'NNLS';
 
 %%
 t0 = tic;
-[xhat_aa, res_norm_hist_aa] = cvxmin(A, b, mu, z0, app, 'max_iter', 1e4);
+[xhat_aa, res_norm_hist_aa] = cvxmin(A, b, mu, z0, app, 'max_iter', 1e4, 'printevery', 1);
 t_aa = toc(t0);
 %%
 t0 = tic;
-[xhat, res_norm_hist] = cvxmin(A, b, mu, z0, app, 'max_iter', 1e4, 'acceleration', 'original');
+[xhat, res_norm_hist] = cvxmin(A, b, mu, z0, app, 'max_iter', 1e4, 'acceleration', 'original', 'printevery', 1);
 t = toc(t0);
 %% objective value
 obj_aa = norm(A*xhat_aa - b, 'fro')
