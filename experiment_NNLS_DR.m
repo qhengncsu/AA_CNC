@@ -1,19 +1,20 @@
 n = 1e4;
-p = 5e3;
+p = 8e3;
 
 %%
 rng(2023)
 % use sparse matrix
-s = 0.5; % sparsity ratio, a alrger sparsity ratio leads to higher speed up ratio
+s = 0.99; % sparsity ratio, a alrger sparsity ratio leads to higher speed up ratio
 A = randn(n, p);
 a = A(:);
 a(randsample(n*p, s*n*p)) = 0;
 A = reshape(a, [n, p]);
 
 b = randn(n, 1);
-%mu = 1.99/norm(A'*A);
-mu = 0.1;
-z0 = lsqr(A, b, 1e-10, 100);
+mu = 1.99/norm(A'*A);
+%mu = 0.1;
+%z0 = lsqr(A, b, 1e-10, 100);
+z0 = zeros(p, 1);
 app = 'NNLS';
 
 %%
@@ -32,7 +33,7 @@ obj = norm(A*xhat - b, 'fro')
 err_aa = sum(min(xhat_aa, 0))
 err = sum(min(xhat, 0))
 
-save NNLS_DR.mat
+%save NNLS_DR.mat
 
 %% Plot settings
 width = 4;     % Width in inches 
@@ -64,7 +65,7 @@ set(0, 'defaultFigurePaperPosition', defsize);
 %% Plot for FB
 figure; 
 clf;    
-plot(log(res_norm_hist), 'k-');
+plot(log(res_norm_hist), 'b-');
 hold on;
 plot(log(res_norm_hist_aa), 'r-');
 %xlim([-pi pi]);
@@ -82,4 +83,4 @@ ax = gca;
 ax.FontSize = fsz; 
 
 %== save as EPS
-print('NNLS_DR', '-depsc2', '-r300');
+%print('NNLS_DR', '-depsc2', '-r300');
