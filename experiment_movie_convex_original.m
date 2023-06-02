@@ -10,7 +10,7 @@ mses_test_convex(1) = sum(mask_test.*(xhat-y_test).^2,'all')/sum(mask_test,'all'
 times_convex(1) = toc
 for i = 2:8
     tic
-    [xhat, vhat, res_norm_hist] = srls_GMC_matrix(y_train, 'matrix completion', lambdas(i), 'mask', mask_train, 'gamma', 0, 'acceleration', 'original', 'splitting', 'DY', 'tol_stop',1e-4, 'lower', 1, 'upper', 5 ,'printevery', 1, 'xv0', [xhat(:);vhat(:)]);
+    [xhat, vhat, ~] = srls_GMC_matrix(y_train, 'matrix completion', lambdas(i), 'mask', mask_train, 'gamma', 0, 'acceleration', 'original', 'splitting', 'DY', 'tol_stop',1e-4, 'lower', 1, 'upper', 5 ,'printevery', 1, 'xv0', [xhat(:);vhat(:)]);
     times_convex(i) = toc;
     mses_validation_convex(i) = sum(mask_validation.*(xhat-y_validation).^2,'all')/sum(mask_validation,'all')
     mses_test_convex(i) = sum(mask_test.*(xhat-y_test).^2,'all')/sum(mask_test,'all')
