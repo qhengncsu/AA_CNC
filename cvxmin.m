@@ -72,8 +72,8 @@ elseif strcmp(app,'SRRR')
         A_mat = sparse(A'*A + eye(p)/mu);
         A_inv = inv(A_mat);
         % items for computing projection onto Ax=b
-        AA = [eye(p*L) -eye(p*L) zeros(p*L);
-            zeros(p*L) eye(p*L) -eye(p*L)];
+        AA = sparse([eye(p*L) -eye(p*L) zeros(p*L);
+            zeros(p*L) eye(p*L) -eye(p*L)]);
         AAT = AA*AA';
 %         AA_pinv = pinv(AA, 1e-2);
 %         AAfun = @(x) AA*x;
