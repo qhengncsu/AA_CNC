@@ -43,10 +43,10 @@ obj_DY_aa = obj_SPRR(Y, A, X_DY_aa, lambda1, lambda2)
 %% DR
 z0 = ones(3*p*L, 1);
 mu = 1;
-% t0 = tic;
-% [xhat_DR, res_norm_hist_DR] = cvxmin(A, b, mu, z0, app, 'lambda1', lambda1, 'lambda2', lambda2,...
-%                                  'max_iter', 1e4, 'acceleration', 'original', 'splitting', 'DR');
-% t_DR = toc(t0);
+t0 = tic;
+[xhat_DR, res_norm_hist_DR] = cvxmin(A, b, mu, z0, app, 'lambda1', lambda1, 'lambda2', lambda2,...
+                                 'max_iter', 1e4, 'acceleration', 'original', 'splitting', 'DR');
+t_DR = toc(t0);
 
 
 t0 = tic;
