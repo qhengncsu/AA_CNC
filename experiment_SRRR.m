@@ -7,8 +7,6 @@ load data_mice
 %%
 A = normalize(X);
 Y = normalize(Y);
-
-
 app = 'SRRR';
 %%
 p = size(A, 2); % A is n-by-p
@@ -18,7 +16,7 @@ mu = 0; % give a random mu for SPRR, the algorithm will compute a good one
 lambda1 = 77;
 lambda2 = 129;
 %% DY
-z0 = ones(p*L, 1);
+z0 = zeros(p*L, 1);
 
 t0 = tic;
 [xhat_DY, res_norm_hist_DY] = cvxmin(A, b, mu, z0, app, 'lambda1', lambda1, 'lambda2', lambda2,...
@@ -41,7 +39,7 @@ obj_DY_aa = obj_SPRR(Y, A, X_DY_aa, lambda1, lambda2)
 %%
 
 %% DR
-z0 = ones(3*p*L, 1);
+z0 = zeros(3*p*L, 1);
 mu = 1;
 t0 = tic;
 [xhat_DR, res_norm_hist_DR] = cvxmin(A, b, mu, z0, app, 'lambda1', lambda1, 'lambda2', lambda2,...
