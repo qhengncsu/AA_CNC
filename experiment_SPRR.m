@@ -7,6 +7,8 @@ load data_mice
 %%
 A = normalize(X);
 Y = normalize(Y);
+
+
 app = 'SRRR';
 %%
 p = size(A, 2); % A is n-by-p
