@@ -11,7 +11,7 @@ plot(gammas,mus_fb, 'b-', 'LineWidth', 1.5, 'DisplayName', 'FB')
 hold on
 plot(gammas,mus_fbf, 'r-', 'LineWidth', 1.5, 'DisplayName', 'FBF')
 l = legend('show','Location','northeast')
-xlabel('gamma');
+xlabel('$$\gamma$$','Interpreter','latex');
 ylabel('step size');
 xlim([0,0.99])
 title("Maximum step size: FB vs FBF")

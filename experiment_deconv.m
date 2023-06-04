@@ -68,7 +68,7 @@ hold on
 plot(log(res_norm_hist2), 'r-', 'LineWidth', 1.5, 'DisplayName', 'AA')
 xlabel('iteration');
 ylabel('residual norm (log scale)');
-title('FB, lambda=10')
+title('FB, $\lambda=10$','Interpreter','latex')
 l = legend('show','Location','northeast')
 nexttile
 plot(log(res_norm_hist3), 'b-', 'LineWidth', 1.5, 'DisplayName', 'Original')
@@ -76,20 +76,20 @@ hold on
 plot(log(res_norm_hist4), 'r-', 'LineWidth', 1.5, 'DisplayName', 'AA')
 xlabel('iteration');
 ylabel('residual norm (log scale)');
-title('FBF, lambda=10')
+title('FBF, $\lambda=10$','Interpreter','latex')
 l = legend('show','Location','northeast')
 nexttile
 plot(lambdas,snr_convex,'b-', 'LineWidth', 1.5, 'DisplayName', sprintf('Convex, FB, AA (%0.0f s)',time5))
 hold on
-plot(lambdas,snr_cnc1,'c-', 'LineWidth', 1.5, 'DisplayName', sprintf('FB, Original (%0.0f s)',time1))
+plot(lambdas,snr_cnc1,'m-', 'LineWidth', 1.5, 'DisplayName', sprintf('FB, Original (%0.0f s)',time1))
 hold on
-plot(lambdas,snr_cnc2,'m-', 'LineWidth', 1.5, 'DisplayName', sprintf('FB, AA (%0.0f s)',time2))
+plot(lambdas,snr_cnc2,'c-', 'LineWidth', 1.5, 'DisplayName', sprintf('FB, AA (%0.0f s)',time2))
 hold on
 plot(lambdas,snr_cnc3,'g-', 'LineWidth', 1.5, 'DisplayName', sprintf('FBF, Original (%0.0f s)',time3))
 hold on
-plot(lambdas,snr_cnc4,'-','color','#77AC30','LineWidth', 1.5, 'DisplayName', sprintf('FBF, AA (%0.0f s)',time4))
+plot(lambdas,snr_cnc4,'r-','LineWidth', 1.5, 'DisplayName', sprintf('FBF, AA (%0.0f s)',time4))
 l = legend('show','Location','southeast')
-xlabel('lambda');
+xlabel('$$\lambda$$','Interpreter','latex');
 ylabel('SNR');
 xlim([10,80])
-title("SNR vs lambda")
+title("SNR vs $\lambda$",'Interpreter','latex')

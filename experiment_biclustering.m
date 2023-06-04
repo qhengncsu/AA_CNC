@@ -5,14 +5,14 @@ lambdas = 4:0.5:6;
 for i=1:5
     lambda = 10^(lambdas(i));
     tic
-        if i==3
+        if i==2
             [xhat1, res_norm_hist1] = dykstra_splitting(U, 'biclustering', lambda, 'acceleration', 'original','printevery',1);
         else 
             [xhat1, ~] = dykstra_splitting(U, 'biclustering', lambda, 'acceleration', 'original','printevery',1);
         end   
     times_original(i) = toc;
     tic
-        if i==3
+        if i==2
             [xhat2, res_norm_hist2] = dykstra_splitting(U, 'biclustering', lambda, 'acceleration', 'aa2','printevery',1);
         else 
             [xhat2, ~] = dykstra_splitting(U, 'biclustering', lambda, 'acceleration', 'aa2','printevery',1);
