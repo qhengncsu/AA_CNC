@@ -9,7 +9,7 @@ function [zstar, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params
     printevery = params.printevery;
     if strcmp(splitting,'DY')
         projection = params.projection;
-    elseif strcmp(splitting,'DL')
+    elseif strcmp(splitting,'DK')
         u = -z0;
     end
     z = z0;
@@ -28,7 +28,7 @@ function [zstar, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params
                 z_R = projection(z);
                 z_Q = backward(z_R - z + forward(z_R));
                 Fz = z-z_R+z_Q;
-            elseif strcmp(splitting,'DL')
+            elseif strcmp(splitting,'DK')
                 z_Q = z + backward(-z);
                 Fz = z_Q - forward(z_Q+u);
             elseif strcmp(splitting,'DR')
@@ -138,7 +138,7 @@ function [zstar, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params
             z_R = projection(zk_1);
             z_Q = backward(z_R - zk_1 + forward(z_R));
             zk = zk_1-z_R+z_Q;
-        elseif strcmp(splitting, 'DL')
+        elseif strcmp(splitting, 'DK')
             z_Q = zk_1 + backward(-zk_1);
             zk = z_Q - forward(z_Q+u);
         elseif strcmp(splitting,'DR')
@@ -167,9 +167,9 @@ function [zstar, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params
                 zkp1_OS = zk - z_f + z_fbf;
             elseif strcmp(splitting,'DY')
                 z_R = projection(zk);
-                z_Q = backward(z_R - zk + forward(z_R));
+                z_Q = backward(z_R - zk + forward(z_R));  
                 zkp1_OS = zk-z_R+z_Q;
-            elseif strcmp(splitting,'DL')
+            elseif strcmp(splitting,'DK')
                 z_Q = zk + backward(-zk);
                 zkp1_OS = z_Q - forward(z_Q+u);
             elseif strcmp(splitting,'DR')
@@ -193,7 +193,7 @@ function [zstar, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params
             gamma_k = left\(Yk' * gk);
             alpha_k = [gamma_k(1);gamma_k(2:end)-gamma_k(1:(end-1));1-gamma_k(end)];
             zkp1_aa = Zk*alpha_k;
-            if ismember(splitting,{'FB','DR','DY','DL'}) && norm(gk)<=D*norm_g0*(i+1)^(-1-epsilon)
+            if ismember(splitting,{'FB','DR','DY','DK'}) && norm(gk)<=D*norm_g0*(i+1)^(-1-epsilon)
                 zk = zkp1_aa;
                 i = i+1;
             elseif strcmp(splitting, 'FBF') && norm(gk_fb)<=0.5*D*norm_g0*(i+1)^(-1-epsilon)
@@ -226,7 +226,7 @@ function [zstar, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params
     end
     if strcmp(splitting, 'DY')
         zstar = projection(zstar);
-    elseif strcmp(splitting, 'DL')
+    elseif strcmp(splitting, 'DK')
         zstar = backward(-zstar);
     elseif strcmp(splitting, 'DR')
         zstar = forward(zstar);

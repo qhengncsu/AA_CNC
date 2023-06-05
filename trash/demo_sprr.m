@@ -1,10 +1,15 @@
 load data_mice
 tic
-[Xhat,~,res_norm_hist1] = srls_GMC_sprr(Y, X, 77, 129, 'acceleration', 'original', 'gamma', 0.6);
+[Xhat,~,res_norm_hist1] = srls_GMC_sprr(Y, X, 77, 129, 'acceleration', 'original', 'gamma', 0);
 time_DY = toc
 tic
-[Xhat,~,res_norm_hist2] = srls_GMC_sprr(Y, X, 77, 129, 'acceleration', 'aa2', 'gamma', 0.6);
+[Xhat_aa,~,res_norm_hist2] = srls_GMC_sprr(Y, X, 77, 129, 'acceleration', 'aa2', 'gamma', 0);
 time_DY_aa2 = toc
+%%
+Y_pred_val = X*Xhat_aa;
+r2_val = 1 - sum(sum((Y - Y_pred_val).^2)) / sum(sum((Y - mean(mean(Y))).^2));
+%%
+
 lambda1_range = logspace(1,3,10);
 lambda2_range = logspace(1,3,10);
 xvalues = round(lambda1_range);
