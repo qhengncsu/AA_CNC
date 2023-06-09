@@ -27,6 +27,7 @@ plot(1:iter2,res_norm_hist2(1:iter2), 'r-', 'LineWidth', 1, 'DisplayName', 'Regu
 l = legend('show','Location','south')
 xlabel('iteration');
 ylabel('residual norm');
+title('Pathological Example')
 
 function x_forward = forward(x)
     x_forward = x - 1/25*grad(x);

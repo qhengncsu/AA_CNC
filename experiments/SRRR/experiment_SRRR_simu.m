@@ -1,4 +1,4 @@
-addpath("Y:\MyDocuments\Xiaoqian\Git\GMC_acceleration_matlab\svt")
+addpath("./svt")
 %%
 n = 500;
 p = 200;
