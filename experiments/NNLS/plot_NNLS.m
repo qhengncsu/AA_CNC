@@ -8,7 +8,7 @@ hold on
 plot(log(res_norm_hist_FB_aa), 'r-', 'LineWidth', 1.5, 'DisplayName', sprintf('AA (%0.1f s)',t_FB_aa))
 xlabel('iteration');
 ylabel('residual norm (log scale)');
-title('FB Splitting');
+title('FB');
 l = legend('show','Location','northeast','fontsize',10)
 nexttile
 plot(log(res_norm_hist_DR), 'b-', 'LineWidth', 1.5, 'DisplayName', sprintf('Original (%0.1f s)',t_DR))
@@ -16,5 +16,5 @@ hold on
 plot(log(res_norm_hist_DR_aa), 'r-', 'LineWidth', 1.5, 'DisplayName', sprintf('AA (%0.1f s)',t_DR_aa))
 xlabel('iteration');
 ylabel('residual norm (log scale)');
-title('DR Splitting');
+title('DR');
 l = legend('show','Location','northeast','fontsize',10)
