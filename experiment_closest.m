@@ -26,6 +26,6 @@ nexttile
 plot(times_original, 'b-', 'LineWidth', 1.5, 'DisplayName', 'Original')
 hold on
 plot(times_aa2, 'r-', 'LineWidth', 1.5, 'DisplayName', 'AA')
-xlabel('$$\log_{2}(\lambda)$$','Interpreter','latex');
+xlabel('$$\log_{2}(p)$$','Interpreter','latex');
 ylabel('time (seconds)');
 title('time vs dimension')
