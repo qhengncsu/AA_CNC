@@ -46,7 +46,7 @@ params_fixed.mem_size = mem_size;
 params_fixed.verbose = true;
 params_fixed.eta = eta;
 params_fixed.printevery = printevery;
-params_fixed.D = 1;
+params_fixed.D = 10;
 params_fixed.xi = 1e-14;
 n1 = size(y,1);
 n2 = size(y,2);
@@ -61,7 +61,7 @@ if strcmp(app,'deblurring')
 elseif strcmp(app,'matrix completion')
     AHA = @(x) mask.*x;
     AHy = AHA(y);
-    projection = @(x) min(max(x,lower),upper);
+    projection = @(x) [min(max(x(1:n_total),lower),upper);x((n_total+1):end)];
     params_fixed.projection = projection;
 end
 

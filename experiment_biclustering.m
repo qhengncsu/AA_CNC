@@ -1,4 +1,4 @@
-U = csvread("lung500.csv",1,1);
+U = csvread("data/lung500.csv",1,1);
 times_original = zeros(5,1);
 times_aa2 = zeros(5,1);
 lambdas = 4:0.5:6;
@@ -19,7 +19,4 @@ for i=1:5
         end 
     times_aa2(i) = toc;
 end
-csvwrite('times_biclustering_original.csv',times_original)
-csvwrite('times_biclustering_aa2.csv',times_aa2)
-csvwrite('resnorm_biclustering_original.csv',res_norm_hist1)
-csvwrite('resnorm_biclustering_aa2.csv',res_norm_hist2)
+save("results/biclustering.mat","times_original","times_aa2","res_norm_hist1","res_norm_hist2")

@@ -1,5 +1,5 @@
 rng('default')
-x = double(rgb2gray(imread('QR_code.jpg')));
+x = double(rgb2gray(imread('data/QR_code.jpg')));
 H = fspecial('average',3);
 y = awgn(imfilter(x,H,'circular'),15,'measured');
 snr_cnc1 = zeros(8,1);
