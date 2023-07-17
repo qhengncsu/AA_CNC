@@ -71,11 +71,13 @@ Xt = X';
 rho = norm(X)^2;
 A = @(x) X*x;
 AH = @(x) Xt*x;
-if strcmp(splitting,'FB') || strcmp(splitting,'DR') 
+if strcmp(splitting,'FB')  
     mu = 1.99/(rho*(1-2*gamma+2*gamma^2)/(1-gamma));
 elseif strcmp(splitting,'FBF')
     gamma_matrix = [1-gamma,gamma;-gamma,gamma];
     mu = 0.99/(rho*norm(gamma_matrix));
+elseif strcmp(splitting,'DR')
+    mu = 0.1;
 end
 Xty = Xt*y;
 if strcmp(type,'single')
@@ -123,7 +125,7 @@ function zxv = forward_DR(xv)
     
     b = [Xty; zeros(p, 1)];
     
-    zxv = (eye(2*p) + mu*M)\(xv+b);
+    zxv = (eye(2*p) + mu*M)\(xv+ mu*b);
 end   
 
 
