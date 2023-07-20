@@ -49,7 +49,7 @@ function [zstar, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params
                 else
                     cg_check = 0;
                 end
-                if cg_check >= 5
+                if cg_check >= 1
                     break
                 end
             end
@@ -115,7 +115,7 @@ function [zstar, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params
                 else
                     cg_check = 0;
                 end
-                if cg_check >= 5
+                if cg_check >= 1
                     z = Fz;
                     break
                 end
@@ -216,7 +216,7 @@ function [zstar, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params
                 else
                     cg_check = 0;
                 end
-                if cg_check >= 5
+                if cg_check >= 1
                     break
                 end
             end

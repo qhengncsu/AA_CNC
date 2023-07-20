@@ -1,4 +1,4 @@
-function [xhat, vhat, res_norm_hist, intercept] = srls_GMC_acc(y, X, lambda_ratio, varargin)
+function [xhat, vhat, res_norm_hist, intercept, time] = srls_GMC_acc(y, X, lambda_ratio, varargin)
 
 % [xhat, vhat, res_norm_hist] = srls_GMC_acc(y, X, varargin)
 %
@@ -26,7 +26,7 @@ params.addParameter('max_iter', 10000, @(x) isnumeric(x));
 params.addParameter('tol_stop', 1e-5, @(x) isnumeric(x));
 params.addParameter('acceleration', 'aa2', @(x) ismember(x,{'original','inertia','aa2'}));
 params.addParameter('early_termination', true, @(x) islogical(x));
-params.addParameter('mem_size', 5, @(x) isnumeric(x));
+params.addParameter('mem_size', 10, @(x) isnumeric(x));
 params.addParameter('eta', 1e-8, @(x) isnumeric(x));
 params.addParameter('printevery', 100, @(x) isnumeric(x));
 params.parse(varargin{:});
@@ -68,6 +68,7 @@ y = y - mean(y);
 
 %
 Xt = X';
+Xty = Xt*y;
 rho = norm(X)^2;
 A = @(x) X*x;
 AH = @(x) Xt*x;
@@ -78,8 +79,12 @@ elseif strcmp(splitting,'FBF')
     mu = 0.99/(rho*norm(gamma_matrix));
 elseif strcmp(splitting,'DR')
     mu = 0.1;
+    AtA = X'*X;
+    G = [(1-gamma) gamma; -gamma gamma];
+    M = kron(G, AtA);
+    b = [Xty; zeros(p, 1)];
+    left = (eye(2*p) + mu*M);
 end
-Xty = Xt*y;
 if strcmp(type,'single')
     lambda_max = max(abs(Xty));
 else
@@ -92,11 +97,13 @@ lambda = lambda_max*lambda_ratio;
 x0 = zeros(p,1);
 v0 = zeros(p,1);
 xv0 = [x0;v0];
+tic
 if  strcmp(splitting,'FB') || strcmp(splitting,'FBF') 
     [xv_lambda, iter, res_norm_hist] = fixed_iter(xv0,@forward,@backward,params_fixed,acceleration);
 elseif  strcmp(splitting,'DR')
     [xv_lambda, iter, res_norm_hist] = fixed_iter(xv0,@forward_DR,@backward,params_fixed,acceleration);
 end
+time = toc;
 
 fprintf('lambda = %f solved in %d iterations\n', lambda, iter);
 
@@ -118,18 +125,8 @@ function zxv = forward(xv)
 end   
 
 function zxv = forward_DR(xv)
-
-    AtA = X'*X;
-    G = [(1-gamma) gamma; -gamma gamma];
-    M = kron(G, AtA);
-    
-    b = [Xty; zeros(p, 1)];
-    
-    zxv = (eye(2*p) + mu*M)\(xv+ mu*b);
+    zxv = left\(xv+ mu*b);
 end   
-
-
-
 
 function xv_next = backward(zxv)
     zx = zxv(1:p,1);

@@ -1,5 +1,3 @@
-%% add path to the code 
-%addpath("Y:\MyDocuments\Xiaoqian\GMC-computation\code")
 %% data generation
 n = 2000;
 p = 10000;
@@ -27,142 +25,31 @@ gamma = 0.8;
 
 %% algorithm comparison on GMC: FB v.s. FB+AA
 % vanilla
-t0 = tic;
-[x_fb, v_fb, res_norm_fb] = srls_GMC_acc(y, X, lambda_ratio, 'type', 'single',...
+[x_fb, v_fb, res_norm_fb, ~, t1] = srls_GMC_acc(y, X, lambda_ratio, 'type', 'single',...
                   'acceleration', 'original',"gamma",gamma, 'splitting', 'FB');
-t1 = toc(t0);
 
 
 % AA
-t0 = tic;
-[x_fbaa, v_fbaa, res_norm_fbaa] = srls_GMC_acc(y, X,  lambda_ratio, 'type','single',...
+[x_fbaa, v_fbaa, res_norm_fbaa, ~, t2] = srls_GMC_acc(y, X,  lambda_ratio, 'type','single',...
                   'acceleration', "aa2","gamma",gamma, 'splitting', 'FB');
-t2 = toc(t0);
-%% Plot settings
-width = 4;     % Width in inches 
-height = 3;    % Height in inches 
-alw = 2;    % AxesLineWidth 
-fsz = 11;      % Fontsize 
-lw = 2;      % LineWidth 
-msz = 2;       % MarkerSize 
-
-% The properties we've been using in the figures
-set(0,'defaultLineLineWidth',lw);   % set the default line width to lw
-set(0,'defaultLineMarkerSize',msz); % set the default line marker size to msz
-set(0,'defaultLineLineWidth',lw);   % set the default line width to lw
-set(0,'defaultLineMarkerSize',msz); % set the default line marker size to msz
-
-% Set the default Size for display
-defpos = get(0,'defaultFigurePosition');
-set(0,'defaultFigurePosition', [defpos(1) defpos(2) width*100, height*100]); 
-
-% Set the defaults for saving/printing to a file
-set(0,'defaultFigureInvertHardcopy','on'); % This is the default anyway
-set(0,'defaultFigurePaperUnits','inches'); % This is the default anyway
-defsize = get(gcf, 'PaperSize');
-left = (defsize(1)- width)/2;
-bottom = (defsize(2)- height)/2;
-defsize = [left, bottom, width, height];
-set(0, 'defaultFigurePaperPosition', defsize);
-
-%% Plot for FB
-figure; 
-clf;    
-plot(log(res_norm_fb), 'k-');
-hold on;
-plot(log(res_norm_fbaa), 'r-');
-%xlim([-pi pi]);
-xlabel('Iteration');
-ylabel('Norm of redidual (log scale)');
-legend(['Original FB (', num2str(round(t1, 2)), ' s)'],...      
-       ['AA + FB (',num2str(round(t2, 2)), ' s)'], ...
-       'FontSize', fsz,...
-       'Location', 'best');
-       %'Location', 'best','Interpreter','latex');
-title(['GMC, ', '\lambda = ', num2str(lambda_ratio),'\lambda_{max}'])
-% set(gca,'XTick',-3:3); %<- Still need to manually specific tick marks
-% set(gca,'YTick',0:10); %<- Still need to manually specific tick marks
-ax = gca; 
-ax.FontSize = fsz; 
-
-%== save as EPS
-print('cvg_single_FB', '-depsc2', '-r300');
 
 %%
-%% algorithm comparison on GMC: DR v.s. DR+AA
-% vanilla
-t0 = tic;
-[x_fbf, v_fbf, res_norm_fbf] = srls_GMC_acc(y, X, lambda_ratio, 'type', 'single',...
+[x_fbf, v_fbf, res_norm_fbf, ~, t3] = srls_GMC_acc(y, X, lambda_ratio, 'type', 'single',...
                   'acceleration', 'original',"gamma",gamma, 'splitting', 'FBF');
-t3 = toc(t0);
 
-% AA
-t0 = tic;
-[x_fbfaa, v3_fbfaa, res_norm_fbfaa] = srls_GMC_acc(y, X,  lambda_ratio, 'type','single',...
+
+[x_fbfaa, v3_fbfaa, res_norm_fbfaa, ~, t4] = srls_GMC_acc(y, X,  lambda_ratio, 'type','single',...
                   'acceleration', "aa2","gamma",gamma, 'splitting', 'FBF');
-t4 = toc(t0);
-%% Plot for FBF
-figure; 
-clf;    
-plot(log(res_norm_fbf), 'k-');
-hold on;
-plot(log(res_norm_fbfaa), 'r-');
-%xlim([-pi pi]);
-xlabel('Iteration');
-ylabel('Norm of redidual (log scale)');
-legend(['Original FBF (', num2str(round(t3, 2)), ' s)'],...      
-       ['AA + FBF (',num2str(round(t4, 2)), ' s)'], ...
-       'FontSize', fsz,...
-       'Location', 'best');
-       %'Location', 'best','Interpreter','latex');
-title(['GMC, ', '\lambda = ', num2str(lambda_ratio),'\lambda_{max}'])
-% set(gca,'XTick',-3:3); %<- Still need to manually specific tick marks
-% set(gca,'YTick',0:10); %<- Still need to manually specific tick marks
-ax = gca; 
-ax.FontSize = fsz; 
-
-%== save as EPS
-print('cvg_single_FBF', '-depsc2', '-r300');
-
-
 
 %%
 %% algorithm comparison on GMC: DR v.s. DR+AA
 % vanilla
-t0 = tic;
-[x_dr, v_dr, res_norm_dr] = srls_GMC_acc(y, X, lambda_ratio, 'type', 'single',...
+[x_dr, v_dr, res_norm_dr, ~, t5] = srls_GMC_acc(y, X, lambda_ratio, 'type', 'single',...
                   'acceleration', 'original',"gamma",gamma, 'splitting', 'DR');
-t5 = toc(t0);
 
 % AA
-t0 = tic;
-[x_draa, v_draa, res_norm_draa] = srls_GMC_acc(y, X,  lambda_ratio, 'type','single',...
+[x_draa, v_draa, res_norm_draa, ~, t6] = srls_GMC_acc(y, X,  lambda_ratio, 'type','single',...
                   'acceleration', "aa2","gamma",gamma, 'splitting', 'DR');
-t6 = toc(t0);
-%% Plot for DR
-figure; 
-clf;    
-plot(log(res_norm_dr), 'k-');
-hold on;
-plot(log(res_norm_draa), 'r-');
-%xlim([-pi pi]);
-xlabel('Iteration');
-ylabel('Norm of redidual (log scale)');
-legend(['Original DR (', num2str(round(t5, 2)), ' s)'],...      
-       ['AA + DR (',num2str(round(t6, 2)), ' s)'], ...
-       'FontSize', fsz,...
-       'Location', 'best');
-       %'Location', 'best','Interpreter','latex');
-title(['GMC, ', '\lambda = ', num2str(lambda_ratio),'\lambda_{max}'])
-% set(gca,'XTick',-3:3); %<- Still need to manually specific tick marks
-% set(gca,'YTick',0:10); %<- Still need to manually specific tick marks
-ax = gca; 
-ax.FontSize = fsz; 
 
-%== save as EPS
-print('cvg_single_DR', '-depsc2', '-r300');
-
-
-%%
-
-save cvg_single.mat
+save("results/cvg_single.mat","t1","t2","t3","t4","t5","t6","res_norm_fb","res_norm_fbaa",...
+    "res_norm_fbf","res_norm_fbfaa","res_norm_dr","res_norm_draa");
