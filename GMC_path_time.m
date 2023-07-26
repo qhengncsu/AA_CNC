@@ -79,7 +79,7 @@ for i = 1: nReps
     %
     diff_gp(i, 1) = norm(xhat3_matrix - xhat4_matrix);
     
-    save GMC_path_time.mat
+    
 end
-
+save("results/GMC_path_time.mat","TM_sg_original","TM_sg_aa2","TM_gp_original","TM_gp_aa2")
 

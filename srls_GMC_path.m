@@ -33,7 +33,7 @@ params.addParameter('nlambda', 100, @(x) isnumeric(x));
 params.addParameter('screen', true, @(x) islogical(x));
 params.addParameter('acceleration', 'aa2', @(x) ismember(x,{'original','inertia','aa2'}));
 params.addParameter('early_termination', true, @(x) islogical(x));
-params.addParameter('mem_size', 5, @(x) isnumeric(x));
+params.addParameter('mem_size', 10, @(x) isnumeric(x));
 params.addParameter('eta', 1e-8, @(x) isnumeric(x));
 params.addParameter('printevery', 100, @(x) isnumeric(x));
 params.parse(varargin{:});

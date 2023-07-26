@@ -88,8 +88,6 @@ for i = 1: nReps
     Err_grGMC(i, 1) = norm(beta-best_beta_grGMC, 'fro');
     Pd_grGMC(i, 1) = norm(X*beta-X*best_beta_grGMC, 'fro');
     lambda_grGMC(i, 1) = cv_grGMC.min_lambda;
-    
-    save GMC_cv.mat
-    
-    
+        
 end
+save("results/GMC_cv.mat")
