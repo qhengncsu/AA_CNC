@@ -54,7 +54,7 @@ for i = 1: nReps
     %% GMC
     t0 = tic;
     cv_GMC = CV_GMC_path(y, X, 'type', "single", 'gamma', 0.8,...
-                          'lambda_min_ratio',0.01, 'acceleration', "aa2", "screen", false);
+                          'lambda_min_ratio',0.01, 'acceleration', "aa2");
     t1 = toc(t0);
     
     

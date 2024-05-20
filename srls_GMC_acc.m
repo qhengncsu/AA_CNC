@@ -1,4 +1,4 @@
-function [xhat, vhat, res_norm_hist, intercept, time] = srls_GMC_acc(y, X, lambda_ratio, varargin)
+function [xhat, vhat, res_norm_hist, time] = srls_GMC_acc(y, X, lambda_ratio, varargin)
 
 % [xhat, vhat, res_norm_hist] = srls_GMC_acc(y, X, varargin)
 %
@@ -8,6 +8,7 @@ function [xhat, vhat, res_norm_hist, intercept, time] = srls_GMC_acc(y, X, lambd
 %
 % argmin_x  argmax_v { F(x,v) =
 %  1/2 ||y - A x||^2 + lam ||x||_1 - gamma/2 ||A(x-v)||_2^2 - lam ||v||_1 }
+% the ||x||_1 above may be replaced with a grouped version
 %
 % INPUT
 %   y 	    response (standardized)
@@ -24,7 +25,7 @@ params.addParameter('gamma', 0.8, @(x) isnumeric(x));
 params.addParameter('splitting', 'FB', @(x) ismember(x,{'DR','FB','FBF'}));
 params.addParameter('max_iter', 10000, @(x) isnumeric(x));
 params.addParameter('tol_stop', 1e-5, @(x) isnumeric(x));
-params.addParameter('acceleration', 'aa2', @(x) ismember(x,{'original','inertia','aa2'}));
+params.addParameter('acceleration', 'aa2', @(x) ismember(x,{'original','aa2'}));
 params.addParameter('early_termination', true, @(x) islogical(x));
 params.addParameter('mem_size', 10, @(x) isnumeric(x));
 params.addParameter('eta', 1e-8, @(x) isnumeric(x));
@@ -61,30 +62,31 @@ params_fixed.xi = 1e-14;
 % data standardization
 n = size(X,1);
 p = size(X,2);
-center = mean(X);
-scale = sqrt(sum((X - center).^2)/n); 
-X = (X - center)./scale;
-y = y - mean(y);
+% center = mean(X);
+% scale = sqrt(sum((X - center).^2)/n); 
+% X = (X - center)./scale;
+% y = y - mean(y);
 
 %
 Xt = X';
 Xty = Xt*y;
-rho = norm(X)^2;
+normA2 = norm(X)^2;
 A = @(x) X*x;
 AH = @(x) Xt*x;
 if strcmp(splitting,'FB')  
-    mu = 1.99/(rho*(1-2*gamma+2*gamma^2)/(1-gamma));
+    mu = 1.99*min(1,(1-gamma)/gamma)/normA2;
 elseif strcmp(splitting,'FBF')
     gamma_matrix = [1-gamma,gamma;-gamma,gamma];
-    mu = 0.99/(rho*norm(gamma_matrix));
+    mu = 0.99/(normA2*norm(gamma_matrix));
 elseif strcmp(splitting,'DR')
-    mu = 0.1;
+    mu = 0.01;
     AtA = X'*X;
     G = [(1-gamma) gamma; -gamma gamma];
     M = kron(G, AtA);
     b = [Xty; zeros(p, 1)];
     left = (eye(2*p) + mu*M);
 end
+fprintf('step size parameter mu = %f\n', mu);
 if strcmp(type,'single')
     lambda_max = max(abs(Xty));
 else
@@ -108,13 +110,13 @@ time = toc;
 fprintf('lambda = %f solved in %d iterations\n', lambda, iter);
 
 %unstandardize the estimates 
-bb = xv_lambda(1:p);
-xhat = bb./scale';
-intercept = mean(y) - center*bb;
-vhat = xv_lambda((p+1):(2*p));
+% bb = xv_lambda(1:p);
+% xhat = bb./scale';
+% intercept = mean(y) - center*bb;
+% vhat = xv_lambda((p+1):(2*p));
 
-%xhat = xv_lambda(1:p);
-%vhat = xv_lambda((p+1):(2*p));
+xhat = xv_lambda(1:p);
+vhat = xv_lambda((p+1):(2*p));
 
 function zxv = forward(xv)
     x = xv(1:p,1);

@@ -25,9 +25,9 @@ params.addParameter('max_iter', 10000, @(x) isnumeric(x));
 params.addParameter('tol_stop', 1e-5, @(x) isnumeric(x));
 params.addParameter('lambda_seq', double.empty(0,1), @(x) isvector(x));
 params.addParameter('lambda_min_ratio', 0.01, @(x) isnumeric(x));
-params.addParameter('screen_off_ratio', 0.05, @(x) isnumeric(x));
+% params.addParameter('screen_off_ratio', 0.05, @(x) isnumeric(x));
 params.addParameter('nlambda', 100, @(x) isnumeric(x));
-params.addParameter('screen', true, @(x) islogical(x));
+% params.addParameter('screen', true, @(x) islogical(x));
 params.addParameter('acceleration', 'aa2', @(x) ismember(x,{'original','inertia','aa2'}));
 params.addParameter('early_termination', true, @(x) islogical(x));
 params.addParameter('mem_size', 10, @(x) isnumeric(x));
@@ -44,10 +44,10 @@ splitting = params.Results.splitting;
 max_iter = params.Results.max_iter;
 tol_stop = params.Results.tol_stop;
 lambda_min_ratio = params.Results.lambda_min_ratio;
-screen_off_ratio = params.Results.screen_off_ratio;
+% screen_off_ratio = params.Results.screen_off_ratio;
 lambda_seq = params.Results.lambda_seq;
 nlambda = params.Results.nlambda;
-screen = params.Results.screen;
+% screen = params.Results.screen;
 acceleration = params.Results.acceleration;
 early_termination = params.Results.early_termination;
 mem_size = params.Results.mem_size;
@@ -56,20 +56,19 @@ eta = params.Results.eta;
 
 % data standardization
 [n, p] = size(X);
-center = mean(X);
-scale = sqrt(sum((X - center).^2)/n);
-X = (X - center)./scale;
-y = y -mean(y);
+% center = mean(X);
+% scale = sqrt(sum((X - center).^2)/n);
+% X = (X - center)./scale;
+% y = y -mean(y);
 
 % Compute lambda sequence
-[xhat_matrix, vhat_matrix, intercept, lambda_seq] = srls_GMC_path(y, X, 'gamma', gamma,...
+[xhat_matrix, vhat_matrix, lambda_seq] = srls_GMC_path(y, X, 'gamma', gamma, 'nlambda', nlambda,...
               'type', type, 'groups', groups, 'lambda_seq', lambda_seq, 'splitting',splitting, ...
-               'max_iter', max_iter, 'tol_stop', tol_stop,'lambda_min_ratio', lambda_min_ratio, ...
-               'screen_off_ratio', screen_off_ratio, 'nlambda', nlambda,'screen', screen, ...
-                'acceleration', acceleration, 'early_termination', early_termination, 'mem_size',mem_size, 'eta', eta);
+              'max_iter', max_iter, 'tol_stop', tol_stop,'lambda_min_ratio', lambda_min_ratio, ...
+              'acceleration', acceleration, 'early_termination', early_termination, 'mem_size',mem_size, 'eta', eta);
 cv.xhat_matrix = xhat_matrix;
 cv.vhat_matrix = vhat_matrix;
-cv.intercept = intercept;
+% cv.intercept = intercept;
 cv.lambda_seq = lambda_seq;
 cv.nfolds = nfolds;
 
@@ -87,15 +86,14 @@ for i=1:k
     ytrain = y(trainidx);
     
     % fit model to training data
-    [train_xmatrix, train_vmatrix, train_intercept] = srls_GMC_path(ytrain, Xtrain, 'gamma', gamma,...
+    [train_xmatrix, ~] = srls_GMC_path(ytrain, Xtrain, 'gamma', gamma, 'nlambda', nlambda, ...
               'type', type, 'groups', groups, 'lambda_seq', lambda_seq, 'splitting',splitting, ...
-               'max_iter', max_iter, 'tol_stop', tol_stop,'lambda_min_ratio', lambda_min_ratio, ...
-               'screen_off_ratio', screen_off_ratio, 'nlambda', nlambda,'screen', screen, ...
-                'acceleration', acceleration, 'early_termination', early_termination, 'mem_size',mem_size, 'eta', eta);
+              'max_iter', max_iter, 'tol_stop', tol_stop,'lambda_min_ratio', lambda_min_ratio, ... 
+              'acceleration', acceleration, 'early_termination', early_termination, 'mem_size',mem_size, 'eta', eta);
     
     % compute fit to test data
     for j=1:length(lambda_seq)
-            cv.err(i,j) = norm(ytest - Xtest*train_xmatrix(j, :)'-train_intercept(j)*ones(length(ytest),1));
+            cv.err(i,j) = norm(ytest - Xtest*train_xmatrix(j, :)');
     end
 end
 

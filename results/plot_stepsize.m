@@ -7,11 +7,11 @@ for i=1:100
     mus_fb(i) = 2/((1-2*gamma+2*gamma^2)/(1-gamma));
     mus_fbf(i) = 1/norm(gamma_matrix);
 end
-plot(gammas,mus_fb, 'b-', 'LineWidth', 1.5, 'DisplayName', 'FB')
+plot(gammas,mus_fb, 'b-', 'LineWidth', 1.5, 'DisplayName', 'FBS')
 hold on
-plot(gammas,mus_fbf, 'r-', 'LineWidth', 1.5, 'DisplayName', 'FBF')
+plot(gammas,mus_fbf, 'r-', 'LineWidth', 1.5, 'DisplayName', 'FBFS')
 l = legend('show','Location','northeast')
 xlabel('$$\gamma$$','Interpreter','latex');
 ylabel('step size');
 xlim([0,0.99])
-title("Maximum step size: FB vs FBF")
+title("Maximum step size: FBS vs FBFS")

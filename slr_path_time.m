@@ -45,16 +45,16 @@ for i = 1: nReps
     
     %% GMC (FB original)
     t0 = tic;
-    [xhat1_matrix, vhat1_matrix, intercept1, lambda_seq1] = srls_GMC_path(y, X, 'type', "single",...
-                                        'gamma', 0.8,'lambda_min_ratio',0.01, 'acceleration', "original", "screen",false);
+    [xhat1_matrix, vhat1_matrix, lambda_seq1] = srls_GMC_path(y, X, 'type', "single",...
+                                        'gamma', 0.8,'lambda_min_ratio',0.01, 'acceleration', "original");
     t1 = toc(t0);
     TM_sg_original(i, 1) = t1;
  
     
     % GMC (FB aa2)
     t0 = tic;
-    [xhat2_matrix, vhat2_matrix, intercept2, lambda_seq2] = srls_GMC_path(y, X, 'type', "single",...
-                                        'gamma', 0.8,'lambda_min_ratio',0.01, 'acceleration', "aa2", "screen",false);
+    [xhat2_matrix, vhat2_matrix, lambda_seq2] = srls_GMC_path(y, X, 'type', "single",...
+                                        'gamma', 0.8,'lambda_min_ratio',0.01, 'acceleration', "aa2");
     t2 = toc(t0);
     TM_sg_aa2(i, 1) = t2;
     
@@ -63,16 +63,16 @@ for i = 1: nReps
     
     %% grGMC (FB original)
     t0 = tic;
-    [xhat3_matrix, vhat3_matrix, intercept3, lambda_seq3] = srls_GMC_path(y, X, 'type', "group", 'groups',groups,...
-                                    'gamma', 0.8,'lambda_min_ratio',0.01, 'acceleration', "original", "screen",false);
+    [xhat3_matrix, vhat3_matrix, lambda_seq3] = srls_GMC_path(y, X, 'type', "group", 'groups',groups,...
+                                    'gamma', 0.8,'lambda_min_ratio',0.01, 'acceleration', "original");
     t3 = toc(t0);
     TM_gp_original(i, 1) = t3;
  
     
     % grGMC (FB aa2)
     t0 = tic;
-    [xhat4_matrix, vhat4_matrix, intercept4, lambda_seq4] = srls_GMC_path(y, X, 'type', "group", 'groups',groups,...
-                                     'gamma', 0.8,'lambda_min_ratio',0.01, 'acceleration', "aa2", "screen",false);
+    [xhat4_matrix, vhat4_matrix, lambda_seq4] = srls_GMC_path(y, X, 'type', "group", 'groups',groups,...
+                                     'gamma', 0.8,'lambda_min_ratio',0.01, 'acceleration', "aa2");
     t4 = toc(t0);
     TM_gp_aa2(i, 1) = t4;
  

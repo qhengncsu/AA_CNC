@@ -19,7 +19,7 @@ hold on
 plot(log(res_norm_hist2), 'r-', 'LineWidth', 1.5, 'DisplayName', 'AA')
 xlabel('iteration');
 ylabel('residual norm (log scale)');
-title('FB, $\lambda=10$, $\gamma=0.8$','Interpreter','latex')
+title('FBS, $\lambda=10$, $\gamma=0.8$','Interpreter','latex')
 l = legend('show','Location','northeast')
 nexttile
 plot(log(res_norm_hist3), 'b-', 'LineWidth', 1.5, 'DisplayName', 'Original')
@@ -27,6 +27,6 @@ hold on
 plot(log(res_norm_hist4), 'r-', 'LineWidth', 1.5, 'DisplayName', 'AA')
 xlabel('iteration');
 ylabel('residual norm (log scale)');
-title('FBF, $\lambda=10$, $\gamma=0.8$','Interpreter','latex')
+title('FBFS, $\lambda=10$, $\gamma=0.8$','Interpreter','latex')
 l = legend('show','Location','northeast')
 l = legend('show','Location','southeast')
