@@ -1,4 +1,4 @@
-function cv = CV_GMC_path(y, X, varargin)
+function cv = cv_GMC_path(y, X, varargin)
 
 % [output] = CV_GMC(y, X, varargin)
 %
@@ -24,14 +24,14 @@ params.addParameter('splitting', 'FB', @(x) ismember(x,{'DR','FB','FBF'}));
 params.addParameter('max_iter', 10000, @(x) isnumeric(x));
 params.addParameter('tol_stop', 1e-5, @(x) isnumeric(x));
 params.addParameter('lambda_seq', double.empty(0,1), @(x) isvector(x));
-params.addParameter('lambda_min_ratio', 0.01, @(x) isnumeric(x));
+params.addParameter('lambda_min_ratio', 0.001, @(x) isnumeric(x));
 % params.addParameter('screen_off_ratio', 0.05, @(x) isnumeric(x));
 params.addParameter('nlambda', 100, @(x) isnumeric(x));
 % params.addParameter('screen', true, @(x) islogical(x));
 params.addParameter('acceleration', 'aa2', @(x) ismember(x,{'original','inertia','aa2'}));
 params.addParameter('early_termination', true, @(x) islogical(x));
 params.addParameter('mem_size', 10, @(x) isnumeric(x));
-params.addParameter('eta', 1e-8, @(x) isnumeric(x));
+params.addParameter('eta', 1e-2, @(x) isnumeric(x));
 params.parse(varargin{:});
 
 
@@ -62,13 +62,13 @@ eta = params.Results.eta;
 % y = y -mean(y);
 
 % Compute lambda sequence
-[xhat_matrix, vhat_matrix, lambda_seq] = srls_GMC_path(y, X, 'gamma', gamma, 'nlambda', nlambda,...
+[xhat_matrix, vhat_matrix, lambda_seq, intercept] = srls_GMC_path(y, X, 'gamma', gamma, 'nlambda', nlambda,...
               'type', type, 'groups', groups, 'lambda_seq', lambda_seq, 'splitting',splitting, ...
               'max_iter', max_iter, 'tol_stop', tol_stop,'lambda_min_ratio', lambda_min_ratio, ...
               'acceleration', acceleration, 'early_termination', early_termination, 'mem_size',mem_size, 'eta', eta);
 cv.xhat_matrix = xhat_matrix;
 cv.vhat_matrix = vhat_matrix;
-% cv.intercept = intercept;
+cv.intercept = intercept;
 cv.lambda_seq = lambda_seq;
 cv.nfolds = nfolds;
 
@@ -86,14 +86,14 @@ for i=1:k
     ytrain = y(trainidx);
     
     % fit model to training data
-    [train_xmatrix, ~] = srls_GMC_path(ytrain, Xtrain, 'gamma', gamma, 'nlambda', nlambda, ...
+    [train_xmatrix, ~, ~, intercept] = srls_GMC_path(ytrain, Xtrain, 'gamma', gamma, 'nlambda', nlambda, ...
               'type', type, 'groups', groups, 'lambda_seq', lambda_seq, 'splitting',splitting, ...
               'max_iter', max_iter, 'tol_stop', tol_stop,'lambda_min_ratio', lambda_min_ratio, ... 
               'acceleration', acceleration, 'early_termination', early_termination, 'mem_size',mem_size, 'eta', eta);
     
     % compute fit to test data
     for j=1:length(lambda_seq)
-            cv.err(i,j) = norm(ytest - Xtest*train_xmatrix(j, :)');
+            cv.err(i,j) = norm(ytest - Xtest*train_xmatrix(j, :)'-intercept(j));
     end
 end
 

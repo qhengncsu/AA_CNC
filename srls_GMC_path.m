@@ -1,4 +1,4 @@
-function [xhat_matrix, vhat_matrix, lambda_seq] = srls_GMC_path(y, X, varargin)
+function [xhat_matrix, vhat_matrix, lambda_seq, intercept] = srls_GMC_path(y, X, varargin)
 
 % [xhat_matrix, vhat_matrix] = srls_GMC_path(y, X, varargin)
 %
@@ -27,14 +27,14 @@ params.addParameter('splitting', 'FB', @(x) ismember(x,{'DR','FB','FBF'}));
 params.addParameter('max_iter', 10000, @(x) isnumeric(x));
 params.addParameter('tol_stop', 1e-5, @(x) isnumeric(x));
 params.addParameter('lambda_seq', double.empty(0,1), @(x) isvector(x));
-params.addParameter('lambda_min_ratio', 0.01, @(x) isnumeric(x));
+params.addParameter('lambda_min_ratio', 1e-3, @(x) isnumeric(x));
 % params.addParameter('screen_off_ratio', 0.05, @(x) isnumeric(x));
 params.addParameter('nlambda', 100, @(x) isnumeric(x));
 % params.addParameter('screen', true, @(x) islogical(x));
 params.addParameter('acceleration', 'aa2', @(x) ismember(x,{'original','aa2'}));
 params.addParameter('early_termination', true, @(x) islogical(x));
 params.addParameter('mem_size', 10, @(x) isnumeric(x));
-params.addParameter('eta', 1e-8, @(x) isnumeric(x));
+params.addParameter('eta', 1e-2, @(x) isnumeric(x));
 params.addParameter('printevery', 100, @(x) isnumeric(x));
 params.parse(varargin{:});
 
@@ -73,10 +73,11 @@ params_fixed.xi = 1e-14;
 % data standardization
 n = size(X,1);
 p = size(X,2);
-% center = mean(X);
-% scale = sqrt(sum((X - center).^2)/n);
-% X = (X - center)./scale;
-% y = y -mean(y);
+center = mean(X);
+scale = sqrt(sum((X - center).^2)/n);
+X = (X - center)./scale;
+ybar = mean(y);
+y = y - ybar;
 
 Xt = X';
 normA2 = norm(X)^2;
@@ -97,9 +98,7 @@ if isempty(lambda_seq)
         Ks = sqrt(group_lens);
         lambda_max = max(group_norm_vec(Xty,groups)./Ks,[],'all');
     end
-    lambda_min = lambda_min_ratio*lambda_max;
-    inc = -(lambda_max-lambda_min)/(nlambda-1);
-    lambda_seq = lambda_max:inc:lambda_min;
+    lambda_seq = logspace(0,log10(lambda_min_ratio),100)*lambda_max;
 else
     group_lens = cellfun(@(x) size(x,2), groups);
     Ks = sqrt(group_lens);
@@ -112,7 +111,7 @@ end
 % initialization
 xhat_matrix = zeros(nlambda,p);
 vhat_matrix = zeros(nlambda,p);
-% intercept = zeros(nlambda, 1);
+intercept = zeros(nlambda, 1);
 % d_prev = zeros(p,1);
 % c_prev = -Xty;
 
@@ -199,9 +198,9 @@ for i = 2:nlambda
     [xv_lambda, iter] = fixed_iter(xv_current,@forward2,@backward2,params_fixed,acceleration);
     fprintf('lambda = %f solved in %d iterations\n', lambda, iter);
     % unstandardization
-    % bb = xv_lambda(1:p);
-    xhat_matrix(i,:) = xv_lambda(1:p);
-    % intercept(i) = mean(y) - center*bb;       
+    bb = xv_lambda(1:p);
+    xhat_matrix(i,:) = bb./scale';
+    intercept(i) = ybar - center*bb;       
     vhat_matrix(i,:) = xv_lambda((p+1):2*p); 
 end
 

@@ -28,7 +28,6 @@ gamma = 0.8;
 [x_fb, v_fb, res_norm_fb, t1] = srls_GMC_acc(y, X, lambda_ratio, 'type', 'single',...
                   'acceleration', 'original', "gamma", gamma, 'splitting', 'FB');
 
-
 % AA
 [x_fbaa, v_fbaa, res_norm_fbaa, t2] = srls_GMC_acc(y, X,  lambda_ratio, 'type','single',...
                   'acceleration', "aa2","gamma",gamma, 'splitting', 'FB');

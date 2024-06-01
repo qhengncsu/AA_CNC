@@ -1,4 +1,4 @@
-function [xhat, vhat, res_norm_hist, time] = srls_GMC_acc(y, X, lambda_ratio, varargin)
+function [xhat, vhat, res_norm_hist, time, intercept] = srls_GMC_acc(y, X, lambda_ratio, varargin)
 
 % [xhat, vhat, res_norm_hist] = srls_GMC_acc(y, X, varargin)
 %
@@ -28,7 +28,7 @@ params.addParameter('tol_stop', 1e-5, @(x) isnumeric(x));
 params.addParameter('acceleration', 'aa2', @(x) ismember(x,{'original','aa2'}));
 params.addParameter('early_termination', true, @(x) islogical(x));
 params.addParameter('mem_size', 10, @(x) isnumeric(x));
-params.addParameter('eta', 1e-8, @(x) isnumeric(x));
+params.addParameter('eta', 1e-2, @(x) isnumeric(x));
 params.addParameter('printevery', 100, @(x) isnumeric(x));
 params.parse(varargin{:});
 
@@ -62,10 +62,10 @@ params_fixed.xi = 1e-14;
 % data standardization
 n = size(X,1);
 p = size(X,2);
-% center = mean(X);
-% scale = sqrt(sum((X - center).^2)/n); 
-% X = (X - center)./scale;
-% y = y - mean(y);
+center = mean(X);
+scale = sqrt(sum((X - center).^2)/n); 
+X = (X - center)./scale;
+y = y - mean(y);
 
 %
 Xt = X';
@@ -110,13 +110,13 @@ time = toc;
 fprintf('lambda = %f solved in %d iterations\n', lambda, iter);
 
 %unstandardize the estimates 
-% bb = xv_lambda(1:p);
-% xhat = bb./scale';
-% intercept = mean(y) - center*bb;
-% vhat = xv_lambda((p+1):(2*p));
-
-xhat = xv_lambda(1:p);
+bb = xv_lambda(1:p);
+xhat = bb./scale';
+intercept = mean(y) - center*bb;
 vhat = xv_lambda((p+1):(2*p));
+
+%xhat = xv_lambda(1:p);
+%vhat = xv_lambda((p+1):(2*p));
 
 function zxv = forward(xv)
     x = xv(1:p,1);
