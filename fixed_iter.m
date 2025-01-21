@@ -25,9 +25,6 @@ function [zstar, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params
                 z_R = projection(z);
                 z_Q = backward(z_R - z + forward(z_R));
                 Fz = z-z_R+z_Q;
-            elseif strcmp(splitting,'DL')
-                z_Q = z + backward(-z);
-                Fz = z_Q - forward(z_Q+u);
             elseif strcmp(splitting,'DR')
                 z_P = forward(z);
                 z_Q = backward(2*z_P-z);
@@ -47,36 +44,6 @@ function [zstar, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params
             end
         end
         zstar = z;
-    % elseif strcmp(acceleration, 'inertia')
-    %     z_prev = z;
-    %     z_prev2 = z;
-    %     while iter<=max_iter-1
-    %         iter = iter + 1;
-    %         z_tilde = z_prev + 0.333*(z_prev - z_prev2);
-    %         if strcmp(splitting, 'FB')
-    %             Fz = backward(forward(z_tilde));
-    %         else
-    %             error("Not Implemented.");
-    %         end
-    %         res_norm = norm(Fz-z_tilde);
-    %         if mod(iter,printevery)==0 && verbose
-    %             fprintf('res_norm = %f after %d iterations\n', res_norm, iter);
-    %         end
-    %         z_prev2 = z_prev;
-    %         z_prev = Fz;
-    %         res_norm_hist(iter) = res_norm;
-    %         if early_termination
-    %             if res_norm/norm(z_tilde) < tol
-    %                 cg_check = cg_check + 1;
-    %             else
-    %                 cg_check = 0;
-    %             end
-    %             if cg_check >= 1
-    %                 z = Fz;
-    %                 break
-    %             end
-    %         end
-    %     end
     elseif strcmp(acceleration, 'aa2')
         mem_size = params.mem_size;
         eta = params.eta;
@@ -94,9 +61,6 @@ function [zstar, iter, res_norm_hist] = fixed_iter(z0, forward, backward, params
             z_R = projection(zk_1);
             z_Q = backward(z_R - zk_1 + forward(z_R));
             zk = zk_1-z_R+z_Q;
-        elseif strcmp(splitting, 'DL')
-            z_Q = zk_1 + backward(-zk_1);
-            zk = z_Q - forward(z_Q+u);
         elseif strcmp(splitting,'DR')
             z_P = forward(zk_1);
             z_Q = backward(2*z_P-zk_1);

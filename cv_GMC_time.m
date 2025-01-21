@@ -1,5 +1,3 @@
-%% add path to the code 
-%addpath("Y:\MyDocuments\Xiaoqian\GMC-computation\code")
 %% data generation
 n = 2000;
 p = 10000;

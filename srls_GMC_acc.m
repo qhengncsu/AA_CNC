@@ -2,7 +2,7 @@ function [xhat, vhat, res_norm_hist, time, intercept] = srls_GMC_acc(y, X, lambd
 
 % [xhat, vhat, res_norm_hist] = srls_GMC_acc(y, X, varargin)
 %
-% srls_GMC_path: Sparse-Regularized Least Squares with generalized MC (GMC) penalty 
+% srls_GMC_acc: Sparse-Regularized Least Squares with generalized MC (GMC) penalty 
 %
 % Saddle point problem:
 %

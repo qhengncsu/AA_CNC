@@ -1,5 +1,3 @@
-% %% add path to the code 
-% addpath('/rsrch6/home/bcb/xliu31/GMC/code')
 %% data generation
 n = 2000;
 p = 10000;

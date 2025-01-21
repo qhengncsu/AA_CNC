@@ -26,12 +26,12 @@ y_test = csvread("data/y_test.csv",1,0);
 X_test = csvread("data/Z_test.csv",1,0);
 beta_sd = csvread("data/Z_train_sd.csv",1,0);
 R2s2 = zeros(100,1);
-nonzeros = zeros(100,1);
+nonzeros1 = zeros(100,1);
 for j=1:100
     beta = xhat1_matrix(j,:)'./beta_sd;
     y_pred = X_test*beta;
     R2s1(j) = corr(y_pred,y_test)^2;
-    nonzeros(j) = sum(beta~=0);
+    nonzeros1(j) = sum(beta~=0);
 end
 
 tic
@@ -45,17 +45,17 @@ xhat2_matrix = srls_GMC_sglpath(y_train, X_train, ...
 t4 = toc
 
 R2s2 = zeros(100,1);
-nonzeros = zeros(100,1);
+nonzeros2 = zeros(100,1);
 for j=1:100
     beta = xhat2_matrix(j,:)'./beta_sd;
     y_pred = X_test*beta;
     R2s2(j) = corr(y_pred,y_test)^2;
-    nonzeros(j) = sum(beta~=0);
+    nonzeros2(j) = sum(beta~=0);
 end
 
 R2s1(isnan(R2s1)) = 0;
 R2s2(isnan(R2s2)) = 0;
-ratio = logspace(-0.5,-3,100);
+ratio = logspace(-0.2,-3,100);
 plot(ratio,R2s1, 'b-', 'LineWidth', 1.5, 'DisplayName', '$$\gamma = 0$$')
 hold on
 plot(ratio,R2s2, 'r-', 'LineWidth', 1.5, 'DisplayName', '$$\gamma = 0.8$$')
@@ -81,5 +81,5 @@ hold on
 plot(log(res_norm_hist3), 'r-', 'LineWidth', 1, 'DisplayName', 'Algorithm 1')
 xlabel('iteration');
 ylabel('residual norm (log scale)');
-title('DYS, $\lambda=10^{-0.5}\lambda_{\max}$','Interpreter','latex','FontSize',10)
+title('DYS, $\lambda=10^{-0.2}\lambda_{\max}$','Interpreter','latex','FontSize',10)
 l = legend('show','Location','northeast','fontsize',10)

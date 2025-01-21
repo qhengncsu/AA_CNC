@@ -23,7 +23,7 @@ params = inputParser;
 params.addParameter('type', 'single', @(x) ischar(x)||isstring(x));
 params.addParameter('groups', {}, @(x) iscell(x));
 params.addParameter('gamma', 0.8, @(x) isnumeric(x));
-params.addParameter('splitting', 'FB', @(x) ismember(x,{'DR','FB','FBF'}));
+params.addParameter('splitting', 'FB', @(x) ismember(x,{'FB','FBF'}));
 params.addParameter('max_iter', 10000, @(x) isnumeric(x));
 params.addParameter('tol_stop', 1e-5, @(x) isnumeric(x));
 params.addParameter('lambda_seq', double.empty(0,1), @(x) isvector(x));
@@ -107,7 +107,6 @@ else
 end
 
 
-
 % initialization
 xhat_matrix = zeros(nlambda,p);
 vhat_matrix = zeros(nlambda,p);
@@ -117,84 +116,7 @@ intercept = zeros(nlambda, 1);
 
 for i = 2:nlambda
     lambda = lambda_seq(i);
-    % % adaptive tolerance?????
-    % tol_kkt = min(1, lambda/100);  
-    % 
     xv_current = [xhat_matrix(i-1,:),vhat_matrix(i-1,:)]';
-    % if screen && (lambda>=screen_off_ratio*lambda_max)
-    %     kkt_fail = true;
-    %     threshold = max(gamma,1-gamma)*(2*lambda - lambda_seq(i-1));
-    %     if strcmp(type,'single')
-    %         keep = ~((abs(d_prev)<threshold) & (abs(c_prev)<threshold));
-    %     else
-    %         keep = ~((group_norm_vec(d_prev,groups)./Ks'<threshold) & (group_norm_vec(c_prev,groups)./Ks'<threshold));
-    %     end
-    %     while kkt_fail
-    %         if strcmp(type,'single')
-    %             a = keep;
-    %         else
-    %             a = false(p,1);
-    %             groups_temp = {};
-    %             l = 0;
-    %             idx = 0;
-    %             for k=1:ngroup
-    %                 if keep(k)
-    %                     a(groups{k}) = true;
-    %                     l = l+1;
-    %                     groups_temp{l} = (idx+1):(idx+length(groups{k}));
-    %                     idx = idx + length(groups{k});
-    %                 end
-    %             end
-    %         end
-    %         p_a = sum(a);
-    %         fprintf('%d features remaining\n', p_a);
-    %         X_a = X(:,a);
-    %         Xt_a = Xt(a,:);
-    %         Xty_a = Xty(a,1);
-    %         A_a = @(x) X_a*x;
-    %         AH_a = @(x) Xt_a*x;
-    %         x_current = xv_current(1:p,1);
-    %         v_current = xv_current((p+1):2*p,1);
-    %         x_current_a = x_current(a,1);
-    %         v_current_a = v_current(a,1);
-    %         xv_current_a = [x_current_a;v_current_a];
-    %         [xv_lambda_a, iter] = fixed_iter(xv_current_a,@forward1,@backward1,params_fixed,acceleration);
-    %         fprintf('lambda = %f solved in %d iterations\n', lambda, iter);
-    %         x_lambda = zeros(p,1);
-    %         v_lambda = zeros(p,1);
-    %         x_lambda(a) = xv_lambda_a(1:p_a);
-    %         v_lambda(a) = xv_lambda_a((p_a+1):2*p_a);
-    %         d_prev = gamma*AH(A(x_lambda-v_lambda));
-    %         c_prev = AH(A(x_lambda)) - Xty - d_prev;
-    %         if strcmp(type,'single')
-    %             kkt_x_case1 = abs(c_prev) > (lambda+tol_kkt);
-    %             kkt_v_case1 = abs(d_prev) > (lambda+tol_kkt);
-    %             kkt_x_case2 = (abs(x_lambda) > tol_kkt) & (abs(c_prev) < lambda-tol_kkt);
-    %             kkt_v_case2 = (abs(v_lambda) > tol_kkt) & (abs(d_prev) < lambda-tol_kkt);
-    %         else
-    %             c_prev_norm = group_norm_vec(c_prev,groups);
-    %             d_prev_norm = group_norm_vec(d_prev,groups);
-    %             x_lambda_norm = group_norm_vec(x_lambda,groups);
-    %             v_lambda_norm = group_norm_vec(v_lambda,groups);
-    %             kkt_x_case1 = c_prev_norm./Ks' > (lambda+tol_kkt);
-    %             kkt_v_case1 = d_prev_norm./Ks' > (lambda+tol_kkt);
-    %             kkt_x_case2 = (x_lambda_norm > tol_kkt) & (c_prev_norm./Ks'<lambda-tol_kkt);
-    %             kkt_v_case2 = (v_lambda_norm > tol_kkt) & (d_prev_norm./Ks'<lambda-tol_kkt);
-    %         end
-    %         kkt_violations = kkt_x_case1 | kkt_v_case1 | kkt_x_case2 | kkt_v_case2;
-    %         kkt_fail = any(kkt_violations);
-    %         total_violations = sum(kkt_violations);
-    %         if kkt_fail
-    %             fprintf('%d optimality conditions violated\n', total_violations);
-    %             keep = keep | kkt_violations;
-    %         end
-    %     end
-    % 
-    %     % unstandardization
-    %     bb = x_lambda;
-    %     xhat_matrix(i,:) = bb./scale';
-    %     intercept(i) = mean(y) - center*bb;
-    %     vhat_matrix(i,:) = v_lambda;
     [xv_lambda, iter] = fixed_iter(xv_current,@forward2,@backward2,params_fixed,acceleration);
     fprintf('lambda = %f solved in %d iterations\n', lambda, iter);
     % unstandardization
@@ -204,27 +126,6 @@ for i = 2:nlambda
     vhat_matrix(i,:) = xv_lambda((p+1):2*p); 
 end
 
-% function zxv = forward1(xv)
-%     x = xv(1:p_a,1);
-%     v = xv((p_a+1):(2*p_a),1);
-%     zx = x - mu * ( AH_a(A_a(x + gamma*(v-x))) - Xty_a);
-%     zv = v - mu * ( gamma * AH_a(A_a(v-x)) );
-%     zxv = [zx;zv];
-% end
-
-% function xv_next = backward1(zxv)
-%     zx = zxv(1:p_a,1);
-%     zv = zxv((p_a+1):(2*p_a),1);
-%     if strcmp(type,'single')
-%         x = soft(zx, mu * lambda);
-%         v = soft(zv, mu * lambda);
-%     else
-%         x = soft_group(zx, mu * lambda, groups_temp);
-%         v = soft_group(zv, mu * lambda, groups_temp);
-%     end
-%     xv_next = [x;v];
-% end
-% 
 function zxv = forward2(xv)
     x = xv(1:p,1);
     v = xv((p+1):(2*p),1);
