@@ -1,6 +1,5 @@
 trash/
 results/*.mat
-results/*.m
 figures
 utils
 MatReg_plots.m
