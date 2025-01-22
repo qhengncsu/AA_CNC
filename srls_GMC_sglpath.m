@@ -26,7 +26,7 @@ params.addParameter('gamma', 0.8, @(x) isnumeric(x));
 params.addParameter('splitting', 'DY', @(x) ismember(x,{'DY'}));
 params.addParameter('max_iter', 10000, @(x) isnumeric(x));
 params.addParameter('tol_stop', 1e-5, @(x) isnumeric(x));
-params.addParameter('lambda_min_ratio', 0.01, @(x) isnumeric(x));
+params.addParameter('lambda_min_ratio', 0.001, @(x) isnumeric(x));
 params.addParameter('nlambda', 100, @(x) isnumeric(x));
 params.addParameter('lambda_seq', double.empty(0,1), @(x) isvector(x));
 params.addParameter('acceleration', 'aa2', @(x) ismember(x,{'original','aa2'}));
@@ -79,9 +79,7 @@ end
 Xty = Xt*y;
 if isempty(lambda_seq)
     lambda_max = max(abs(Xty));
-    lambda_min = lambda_min_ratio*lambda_max;
-    inc = -(lambda_max-lambda_min)/(nlambda-1);
-    lambda_seq = lambda_max:inc:lambda_min;
+    lambda_seq = logspace(0,log10(lambda_min_ratio),100)*lambda_max;
 else
     lambda_max = max(lambda_seq);
     lambda_min = min(lambda_seq);
