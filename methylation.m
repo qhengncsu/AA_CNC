@@ -76,7 +76,7 @@ title("$$R^2$$ - Sparse Group Lasso",'Interpreter','latex')
 
 plot(log(res_norm_hist1), 'b-', 'LineWidth', 1, 'DisplayName', 'Original')
 hold on
-plot(log(res_norm_hist2), 'g-', 'LineWidth', 1, 'DisplayName', 'Naive AA')
+plot(log(res_norm_hist2), 'color', [0.8,0.58,1], 'LineWidth', 1, 'DisplayName', 'Naive AA')
 hold on
 plot(log(res_norm_hist3), 'r-', 'LineWidth', 1, 'DisplayName', 'Algorithm 1')
 xlabel('iteration');
